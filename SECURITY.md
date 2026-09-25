@@ -14,7 +14,7 @@ Instead, use GitHub's private reporting:
 - Click **Report a vulnerability**
 - Describe the issue
 
-If private reporting is unavailable, contact the maintainer directly at **[maintainer email]**.
+If private reporting is unavailable, contact the maintainer directly at **agung.darmantoo@gmail.com**.
 
 ## What to include
 
