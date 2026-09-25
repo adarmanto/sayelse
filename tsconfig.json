@@ -1,0 +1,18 @@
+{
+  "extends": "./.wxt/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["chrome", "node", "vitest/globals"]
+  },
+  "include": [
+    "src",
+    "tests",
+    "wxt.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "wxt-env.d.ts",
+    ".wxt/wxt.d.ts"
+  ]
+}

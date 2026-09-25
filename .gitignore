@@ -1,0 +1,12 @@
+node_modules
+.wxt
+.output
+coverage
+.commandcode
+9router-key.txt
+.env
+.env.*
+!.env.example
+.DS_Store
+playwright-report
+test-results
