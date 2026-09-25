@@ -3,7 +3,6 @@ node_modules
 .output
 coverage
 .commandcode
-9router-key.txt
 .env
 .env.*
 !.env.example
