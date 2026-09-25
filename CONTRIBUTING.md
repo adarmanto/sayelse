@@ -7,7 +7,7 @@ Thanks for taking the time. This document covers how to get set up, what a good 
 You will need Chrome 114 or newer, Node.js 22 or newer, pnpm 10, and a 9Router instance running locally on port `20128`.
 
 ```bash
-git clone https://github.com/<your-username>/sayelse.git
+git clone git@github.com:adarmanto/sayelse.git
 cd sayelse
 pnpm install
 pnpm dev

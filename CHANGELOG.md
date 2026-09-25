@@ -24,5 +24,5 @@ First public release, usable as an unpacked build.
 - Light, dark, and system themes.
 - Unit tests across the router client, SSE parsing, selection handling, inline layout, message schemas, storage, and prompts.
 
-[Unreleased]: https://github.com/[owner]/sayelse/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/[owner]/sayelse/releases/tag/v0.1.0
+[Unreleased]: https://github.com/adarmanto/sayelse/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/adarmanto/sayelse/releases/tag/v0.1.0
