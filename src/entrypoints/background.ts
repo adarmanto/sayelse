@@ -1,8 +1,7 @@
 import { MAX_SOURCE_CHARS } from '../lib/constants';
-import { captureSelectionInPage, replaceSelectionInPage } from '../lib/browser/injection';
+import { captureSelectionInPage, parseCaptureResult, replaceSelectionInPage } from '../lib/browser/injection';
 import { saveSelectionHandoff } from '../lib/storage/handoff';
 import { getLocalArea, getSessionArea, getSettings } from '../lib/storage/settings';
-import { parseCaptureResult } from '../lib/browser/selection';
 import { streamChat } from '../lib/api/nineRouter';
 import { generateInlineAlternatives } from '../lib/browser/inlineRewrite';
 import {
@@ -58,7 +57,6 @@ async function runInlineRewrite(
         token: settings.token,
         messages,
         signal: controller.signal,
-        n: 2,
       }),
     });
     await sendInlineProgress(tabId, frameId, {

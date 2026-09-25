@@ -1,13 +1,9 @@
 import { z } from 'zod';
 import {
   DEFAULT_SETTINGS,
-  HANDOFF_STORAGE_KEY,
-  HISTORY_KEY_PREFIX,
   LENGTHS,
-  MAX_HISTORY_BYTES,
-  MAX_HISTORY_ENTRIES,
+  MAX_SOURCE_CHARS,
   OPERATIONS,
-  SETTINGS_STORAGE_KEY,
   STRENGTHS,
   TONES,
 } from '../constants';
@@ -52,7 +48,7 @@ export type SelectionCapture = z.infer<typeof selectionCaptureSchema>;
 
 export const handoffSchema = z.object({
   version: z.literal(1),
-  source: z.string().min(1).max(20_000),
+  source: z.string().min(1).max(MAX_SOURCE_CHARS),
   tabId: z.number().int().nonnegative(),
   frameId: z.number().int().nonnegative(),
   capturedAt: z.number().int().positive(),
@@ -82,15 +78,6 @@ export const historyEntrySchema = z.object({
 });
 
 export type HistoryEntry = z.infer<typeof historyEntrySchema>;
-
-export const handoffKey = HANDOFF_STORAGE_KEY;
-export const settingsKey = SETTINGS_STORAGE_KEY;
-export const historyKey = (id: string) => `${HISTORY_KEY_PREFIX}${id}`;
-
-export const storageLimits = {
-  maxHistoryEntries: MAX_HISTORY_ENTRIES,
-  maxHistoryBytes: MAX_HISTORY_BYTES,
-} as const;
 
 export function getDefaultSettings(): Settings {
   return structuredClone(DEFAULT_SETTINGS);

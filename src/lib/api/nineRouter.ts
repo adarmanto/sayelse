@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import {
+  GENERATION_TIMEOUT_MS,
+  MAX_OUTPUT_CHARS,
   MODEL_DISCOVERY_TIMEOUT_MS,
   ROUTER_BASE_URL,
 } from '../constants';
@@ -138,8 +140,8 @@ export interface StreamOptions {
 }
 
 export async function streamChat(options: StreamOptions): Promise<string> {
-  const timeout = withTimeout(options.signal, options.timeoutMs ?? 120_000);
-  const maxOutputChars = options.maxOutputChars ?? 50_000;
+  const timeout = withTimeout(options.signal, options.timeoutMs ?? GENERATION_TIMEOUT_MS);
+  const maxOutputChars = options.maxOutputChars ?? MAX_OUTPUT_CHARS;
   let fullText = '';
   let done = false;
 

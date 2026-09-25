@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { MAX_OUTPUT_CHARS, MAX_SOURCE_CHARS } from '../constants';
 import { lengthSchema, operationSchema, selectionCaptureSchema, toneSchema } from '../storage/schema';
 
 export const runInlineRewriteMessageSchema = z.object({
   type: z.literal('run-inline-rewrite'),
   requestId: z.string().min(1).max(128),
-  source: z.string().min(1).max(20_000),
+  source: z.string().min(1).max(MAX_SOURCE_CHARS),
   capture: selectionCaptureSchema.nullable(),
   operation: operationSchema,
   tone: toneSchema,
@@ -20,7 +21,7 @@ export const cancelInlineRewriteMessageSchema = z.object({
 
 const inlineAlternativeSchema = z.object({
   id: z.enum(['closest', 'distinct']),
-  text: z.string().min(1).max(50_000),
+  text: z.string().min(1).max(MAX_OUTPUT_CHARS),
 });
 
 export const inlineRewriteProgressMessageSchema = z.discriminatedUnion('status', [
@@ -62,7 +63,7 @@ export const replaceSelectionMessageSchema = z.object({
   tabId: z.number().int().nonnegative(),
   frameId: z.number().int().nonnegative().default(0),
   capture: selectionCaptureSchema.nullable(),
-  replacement: z.string().min(1).max(50_000),
+  replacement: z.string().min(1).max(MAX_OUTPUT_CHARS),
 });
 
 export type ReplaceSelectionMessage = z.infer<typeof replaceSelectionMessageSchema>;

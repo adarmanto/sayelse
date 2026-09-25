@@ -1,3 +1,4 @@
+import { MAX_SOURCE_CHARS } from '../lib/constants';
 import { captureSelectionInPage, replaceSelectionInPage } from '../lib/browser/injection';
 import { calculateInlinePopupLayout } from '../lib/browser/inlineLayout';
 import { INLINE_ACTIONS, INLINE_ALTERNATIVES } from '../lib/browser/inlineActions';
@@ -63,7 +64,7 @@ function selectedText(): InlinePosition | null {
   if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
     if (activeElement.type === 'password' || activeElement.selectionStart === activeElement.selectionEnd) return null;
     const text = activeElement.value.slice(activeElement.selectionStart ?? 0, activeElement.selectionEnd ?? 0);
-    if (!text.trim() || text.length > 20_000) return null;
+    if (!text.trim() || text.length > MAX_SOURCE_CHARS) return null;
     const rect = activeElement.getBoundingClientRect();
     return { text, rect: activeElement instanceof HTMLTextAreaElement
       ? selectedTextareaRect(activeElement)
@@ -78,12 +79,12 @@ function selectedText(): InlinePosition | null {
     : range.startContainer.parentElement;
   if (!isEditableElement(container)) return null;
   const text = selection.toString();
-  if (!text.trim() || text.length > 20_000) return null;
+  if (!text.trim() || text.length > MAX_SOURCE_CHARS) return null;
   const rangeRect = range.getBoundingClientRect();
   return { text, rect: rangeRect.width > 0 ? rangeRect : (container?.getBoundingClientRect() ?? null) };
 }
 
-function createBaseHost(position: InlinePosition): { root: ShadowRoot; popup: HTMLDivElement } {
+function createBaseHost(): { root: ShadowRoot; popup: HTMLDivElement } {
   host?.remove();
   host = document.createElement('div');
   host.dataset.sayelseInline = 'true';
@@ -138,7 +139,6 @@ function createBaseHost(position: InlinePosition): { root: ShadowRoot; popup: HT
   popup.className = 'menu';
   shadow.append(style, popup);
   document.documentElement.append(host);
-  void position;
   return { root: shadow, popup };
 }
 
@@ -175,7 +175,7 @@ function createBrand(): HTMLDivElement {
 }
 
 function renderMenu(position: InlinePosition, capture: SelectionCapture | null): void {
-  const { popup } = createBaseHost(position);
+  const { popup } = createBaseHost();
   popup.setAttribute('role', 'menu');
   popup.setAttribute('aria-orientation', 'horizontal');
   popup.setAttribute('aria-label', 'SayElse writing actions');
@@ -211,7 +211,7 @@ async function runInlineRewrite(
   if (activeRequestId) {
     void chrome.runtime.sendMessage({ type: 'cancel-inline-rewrite', requestId: activeRequestId });
   }
-  const { popup } = createBaseHost(position);
+  const { popup } = createBaseHost();
   popup.className = 'result';
   popup.setAttribute('role', 'dialog');
   popup.setAttribute('aria-label', 'SayElse rewrite choices');
@@ -356,7 +356,7 @@ export function showMenu(): void {
     hideMenu();
     return;
   }
-  const capture = captureSelectionInPage(20_000);
+  const capture = captureSelectionInPage(MAX_SOURCE_CHARS);
   const fingerprint = `${Math.round(selected.rect.top)}:${Math.round(selected.rect.left)}:${selected.text.slice(0, 80)}`;
   if (fingerprint === lastFingerprint && host?.isConnected) return;
   lastFingerprint = fingerprint;
@@ -375,14 +375,13 @@ export default defineContentScript({
     chrome.runtime.onMessage.addListener((message: unknown) => {
       const parsed = inlineRewriteProgressMessageSchema.safeParse(message);
       if (!parsed.success) return;
-      if (parsed.data.requestId === activeRequestId) {
-        showResult(parsed.data);
-        if (parsed.data.status === 'complete' || parsed.data.status === 'error' || parsed.data.status === 'cancelled') {
-          activeRequestId = null;
-        }
-        return;
-      }
       showResult(parsed.data);
+      if (
+        parsed.data.requestId === activeRequestId
+        && parsed.data.status !== 'started'
+      ) {
+        activeRequestId = null;
+      }
     });
 
     document.addEventListener('pointerup', scheduleMenu, true);
