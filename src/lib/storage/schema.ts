@@ -7,7 +7,6 @@ import {
   STRENGTHS,
   TONES,
 } from '../constants';
-
 export const operationSchema = z.enum(OPERATIONS);
 export const toneSchema = z.enum(TONES);
 export const strengthSchema = z.enum(STRENGTHS);
@@ -15,8 +14,9 @@ export const lengthSchema = z.enum(LENGTHS);
 export const themeSchema = z.enum(['system', 'light', 'dark']);
 
 export const settingsSchema = z.object({
-  version: z.literal(1),
-  token: z.string().max(4096),
+  version: z.literal(2),
+  baseUrl: z.string().min(1).max(2048),
+  apiKey: z.string().max(4096),
   selectedModel: z.string().max(256).nullable(),
   defaults: z.object({
     operation: operationSchema,
@@ -27,8 +27,47 @@ export const settingsSchema = z.object({
   theme: themeSchema,
 });
 
+const legacySettingsSchema = z.object({
+  version: z.literal(1),
+  token: z.string().max(4096).default(''),
+  selectedModel: z.string().max(256).nullable().default(null),
+  defaults: z
+    .object({
+      operation: operationSchema,
+      tone: toneSchema,
+      strength: strengthSchema,
+      length: lengthSchema,
+    })
+    .partial()
+    .default({}),
+  theme: themeSchema.default('system'),
+});
+
 export type Settings = z.infer<typeof settingsSchema>;
 export type RewriteSettings = Settings['defaults'];
+
+/**
+ * Upgrades a persisted v1 payload to the v2 shape, moving `token` to `apiKey`
+ * and seeding the default endpoint. Every other field is carried over as-is so
+ * an existing user keeps their key, model, and recipe.
+ */
+export function migrateSettings(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) {
+    return raw;
+  }
+  const legacy = legacySettingsSchema.safeParse(raw);
+  if (!legacy.success) {
+    return raw;
+  }
+  return {
+    version: 2,
+    baseUrl: DEFAULT_SETTINGS.baseUrl,
+    apiKey: legacy.data.token,
+    selectedModel: legacy.data.selectedModel,
+    defaults: { ...DEFAULT_SETTINGS.defaults, ...legacy.data.defaults },
+    theme: legacy.data.theme,
+  };
+}
 
 export const selectionCaptureSchema = z.object({
   version: z.literal(1),

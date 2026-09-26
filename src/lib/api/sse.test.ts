@@ -51,4 +51,23 @@ describe('readSseEvents', () => {
     const values = await collect(streamFromChunks([': keep-alive\nevent: ping\n\ndata: value\n\n']));
     expect(values).toEqual(['value']);
   });
+
+  it('cancels the underlying stream when the consumer stops early', async () => {
+    const encoder = new TextEncoder();
+    let cancelled = false;
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode('data: first\n\n'));
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+
+    for await (const _event of readSseEvents(stream)) {
+      break;
+    }
+
+    expect(cancelled).toBe(true);
+  });
 });

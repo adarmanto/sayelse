@@ -4,7 +4,10 @@ import {
   DEFAULT_SETTINGS,
   type Theme,
 } from '../../lib/constants';
-import { listModels } from '../../lib/api/nineRouter';
+import { listModels, type EndpointConfig } from '../../lib/api/openaiCompatible';
+import { normaliseBaseUrl } from '../../lib/api/endpoint';
+import { grantEndpointAccess, type PermissionsLike } from '../../lib/browser/permissions';
+import { resolveTheme } from '../../lib/browser/inlineTheme';
 import { generateRewrite, describeGenerationError, type GenerationError, type GenerationStatus } from '../../lib/generation';
 import { createHistoryEntryId, clearHistory, deleteHistoryEntry, listHistory, saveHistoryEntry } from '../../lib/storage/history';
 import { consumeSelectionHandoff } from '../../lib/storage/handoff';
@@ -23,10 +26,7 @@ type PanelView = 'write' | 'history' | 'settings';
 type ConnectionStatus = 'checking' | 'online' | 'offline';
 
 function applyTheme(theme: Theme): void {
-  const resolved = theme === 'system'
-    ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
-    : theme;
-  document.documentElement.dataset.theme = resolved;
+  document.documentElement.dataset.theme = resolveTheme(theme, window.matchMedia('(prefers-color-scheme: light)').matches);
 }
 
 export default function App() {
@@ -45,15 +45,17 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
+  const loadedRef = useRef(false);
+  const settingsRef = useRef<Settings>(getDefaultSettings());
 
   const refreshHistory = useCallback(async () => {
     setHistory(await listHistory(getLocalArea()));
   }, []);
 
-  const refreshModels = useCallback(async (token: string) => {
+  const refreshModels = useCallback(async (endpoint: EndpointConfig) => {
     setConnectionStatus('checking');
     try {
-      const nextModels = await listModels(token);
+      const nextModels = await listModels(endpoint);
       setModels(nextModels);
       setConnectionStatus('online');
       if (nextModels.length > 0) {
@@ -81,6 +83,7 @@ export default function App() {
         consumeSelectionHandoff(getSessionArea()),
       ]);
       if (!active) return;
+      settingsRef.current = nextSettings;
       setSettings(nextSettings);
       setControls(nextSettings.defaults);
       setHistory(nextHistory);
@@ -95,10 +98,22 @@ export default function App() {
           });
         }
       }
-      void refreshModels(nextSettings.token);
+      void refreshModels({ baseUrl: nextSettings.baseUrl, apiKey: nextSettings.apiKey });
     })();
     return () => { active = false; abortRef.current?.abort(); };
   }, [refreshModels]);
+
+  // The initial load already fetches models; this only reacts to a later change
+  // of endpoint made in Settings, where the cached list no longer applies.
+  useEffect(() => {
+    if (!loadedRef.current) {
+      loadedRef.current = true;
+      return;
+    }
+    setModels([]);
+    setSettings((current) => (current.selectedModel ? { ...current, selectedModel: null } : current));
+    void refreshModels({ baseUrl: settings.baseUrl, apiKey: settings.apiKey });
+  }, [settings.baseUrl, refreshModels]);
 
   useEffect(() => {
     applyTheme(settings.theme);
@@ -126,9 +141,27 @@ export default function App() {
   }, []);
 
   const updateSettings = useCallback((next: Settings) => {
+    settingsRef.current = next;
     setSettings(next);
     void saveSettings(next);
   }, []);
+
+  const saveBaseUrl = useCallback(async (draft: string): Promise<string | null> => {
+    const normalised = normaliseBaseUrl(draft);
+    if (!normalised.ok) {
+      return normalised.message;
+    }
+    const grant = await grantEndpointAccess(normalised.value, browser.permissions as unknown as PermissionsLike);
+    if (!grant.ok) {
+      return grant.message;
+    }
+    const next: Settings = { ...settingsRef.current, baseUrl: normalised.value };
+    settingsRef.current = next;
+    setSettings(next);
+    await saveSettings(next);
+    void refreshModels({ baseUrl: normalised.value, apiKey: next.apiKey });
+    return null;
+  }, [refreshModels]);
 
   const generate = useCallback(async () => {
     if (!source.trim()) {
@@ -138,7 +171,7 @@ export default function App() {
     }
     const model = settings.selectedModel;
     if (!model) {
-      setError({ code: 'configuration', message: 'Choose a 9Router model in Settings first.' });
+      setError({ code: 'configuration', message: 'Choose a model in Settings first.' });
       setStatus('error');
       return;
     }
@@ -159,7 +192,8 @@ export default function App() {
         strength: controls.strength,
         length: controls.length,
         model,
-        token: settings.token,
+        baseUrl: settings.baseUrl,
+        apiKey: settings.apiKey,
         signal: controller.signal,
         onToken: (fullText) => {
           if (requestId === requestIdRef.current) setResult(fullText);
@@ -190,7 +224,7 @@ export default function App() {
     } finally {
       if (abortRef.current === controller) abortRef.current = null;
     }
-  }, [controls, refreshHistory, settings.selectedModel, settings.token, source]);
+  }, [controls, refreshHistory, settings.baseUrl, settings.apiKey, settings.selectedModel, source]);
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
@@ -230,7 +264,12 @@ export default function App() {
       setHandoff(null);
       setView('write');
     } else {
-      setError({ code: 'configuration', message: parsed.success ? parsed.data.reason ?? 'The selection could not be replaced.' : 'The selection could not be replaced.' });
+      setError({
+        code: 'configuration',
+        message: parsed.success && parsed.data.reason
+          ? parsed.data.reason
+          : 'The selection could not be replaced.',
+      });
       setStatus('error');
     }
   }, [handoff, result]);
@@ -303,7 +342,7 @@ export default function App() {
           </div>
         </>}
         {view === 'history' && <HistoryView entries={history} onLoad={loadHistoryEntry} onCopy={(entry) => void copyText(entry.result)} onDelete={(entry) => void deleteEntry(entry)} onClear={() => void clearSavedHistory()} />}
-        {view === 'settings' && <SettingsView settings={settings} models={models} connectionStatus={connectionStatus} onSettingsChange={updateSettings} onRefreshModels={() => void refreshModels(settings.token)} onClearHistory={() => void clearSavedHistory()} onClearAll={() => void clearAllData()} />}
+        {view === 'settings' && <SettingsView settings={settings} models={models} connectionStatus={connectionStatus} onSettingsChange={updateSettings} onRefreshModels={() => void refreshModels({ baseUrl: settings.baseUrl, apiKey: settings.apiKey })} onSaveBaseUrl={saveBaseUrl} onClearHistory={() => void clearSavedHistory()} onClearAll={() => void clearAllData()} />}
       </main>
 
       <footer className="app-footer"><span><span className="footer-dot" /> No SayElse account</span><span>Text stays in your Chrome profile until you delete it</span></footer>

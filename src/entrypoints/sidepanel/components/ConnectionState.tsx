@@ -7,7 +7,7 @@ interface ConnectionStateProps {
 }
 
 export function ConnectionState({ status, model, onOpenSettings }: ConnectionStateProps) {
-  const label = status === 'checking' ? 'Checking router' : status === 'online' ? 'Local 9Router' : 'Router offline';
+  const label = status === 'checking' ? 'Checking endpoint' : status === 'online' ? 'Endpoint ready' : 'Endpoint unreachable';
   return (
     <button className={`connection connection-${status}`} type="button" onClick={onOpenSettings} aria-label="Open connection settings">
       <span className="connection-dot" aria-hidden="true" />

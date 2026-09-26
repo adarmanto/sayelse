@@ -1,4 +1,4 @@
-export const ROUTER_BASE_URL = 'http://127.0.0.1:20128/v1';
+export const DEFAULT_BASE_URL = 'http://127.0.0.1:20128/v1';
 export const MAX_SOURCE_CHARS = 20_000;
 export const MAX_OUTPUT_CHARS = 50_000;
 export const MODEL_DISCOVERY_TIMEOUT_MS = 10_000;
@@ -33,8 +33,9 @@ export type Length = (typeof LENGTHS)[number];
 export type Theme = 'system' | 'light' | 'dark';
 
 export const DEFAULT_SETTINGS = {
-  version: 1 as const,
-  token: '',
+  version: 2 as const,
+  baseUrl: DEFAULT_BASE_URL,
+  apiKey: '',
   selectedModel: null,
   defaults: {
     operation: 'paraphrase' as Operation,

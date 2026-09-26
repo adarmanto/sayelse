@@ -106,13 +106,32 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 1px solid var(--focus);
   outline-offset: 2px;
 }
 
 .icon {
   display: block;
   flex: 0 0 auto;
+}
+
+.group-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.group-icon {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: 0.55rem;
+  color: var(--accent);
+  background: var(--accent-wash);
 }
 
 .sr-only {
@@ -880,6 +899,27 @@ select:focus-visible {
 .settings-group > select,
 .settings-group input {
   margin-bottom: 0.8rem;
+}
+
+.field-hint {
+  margin: -0.4rem 0 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.field-hint code {
+  padding: 0.05rem 0.25rem;
+  border-radius: 4px;
+  background: var(--surface-soft);
+  font-size: 0.95em;
+}
+
+.field-error {
+  margin: -0.4rem 0 0.8rem;
+  color: var(--danger);
+  font-size: 0.68rem;
+  line-height: 1.45;
 }
 
 .settings-actions {

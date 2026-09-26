@@ -26,11 +26,11 @@ interface ControlsProps {
   disabled?: boolean;
 }
 
-function SelectField({ label, value, options, labels, onChange, disabled }: { label: string; value: string; options: readonly string[]; labels: Record<string, string>; onChange: (value: string) => void; disabled: boolean }) {
+function SelectField({ label, name, value, options, labels, onChange, disabled }: { label: string; name: string; value: string; options: readonly string[]; labels: Record<string, string>; onChange: (value: string) => void; disabled: boolean }) {
   return (
     <label className="select-field">
       <span>{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled}>
+      <select id={`sayelse-${name}`} name={name} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled}>
         {options.map((option) => <option key={option} value={option}>{labels[option]}</option>)}
       </select>
     </label>
@@ -47,10 +47,10 @@ export function Controls({ value, onChange, disabled = false }: ControlsProps) {
         </div>
       </div>
       <div className="control-grid">
-        <SelectField label="Goal" value={value.operation} options={OPERATIONS} labels={OPERATION_LABELS} onChange={(next) => onChange({ ...value, operation: next as Operation })} disabled={disabled} />
-        <SelectField label="Tone" value={value.tone} options={TONES} labels={TONE_LABELS} onChange={(next) => onChange({ ...value, tone: next as Tone })} disabled={disabled} />
-        <SelectField label="Intensity" value={value.strength} options={STRENGTHS} labels={STRENGTH_LABELS} onChange={(next) => onChange({ ...value, strength: next as Strength })} disabled={disabled} />
-        <SelectField label="Length" value={value.length} options={LENGTHS} labels={LENGTH_LABELS} onChange={(next) => onChange({ ...value, length: next as Length })} disabled={disabled} />
+        <SelectField label="Goal" name="operation" value={value.operation} options={OPERATIONS} labels={OPERATION_LABELS} onChange={(next) => onChange({ ...value, operation: next as Operation })} disabled={disabled} />
+        <SelectField label="Tone" name="tone" value={value.tone} options={TONES} labels={TONE_LABELS} onChange={(next) => onChange({ ...value, tone: next as Tone })} disabled={disabled} />
+        <SelectField label="Intensity" name="strength" value={value.strength} options={STRENGTHS} labels={STRENGTH_LABELS} onChange={(next) => onChange({ ...value, strength: next as Strength })} disabled={disabled} />
+        <SelectField label="Length" name="length" value={value.length} options={LENGTHS} labels={LENGTH_LABELS} onChange={(next) => onChange({ ...value, length: next as Length })} disabled={disabled} />
       </div>
     </section>
   );

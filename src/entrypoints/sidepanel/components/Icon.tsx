@@ -1,28 +1,158 @@
+import type { ReactNode } from 'react';
+
+export type IconName =
+  | 'spark'
+  | 'write'
+  | 'history'
+  | 'settings'
+  | 'connection'
+  | 'recipe'
+  | 'appearance'
+  | 'privacy'
+  | 'data'
+  | 'copy'
+  | 'replace'
+  | 'stop'
+  | 'retry'
+  | 'refresh'
+  | 'trash'
+  | 'arrow'
+  | 'check'
+  | 'alert';
+
 interface IconProps {
-  name: 'spark' | 'write' | 'history' | 'settings' | 'copy' | 'replace' | 'stop' | 'retry' | 'refresh' | 'trash' | 'arrow' | 'check' | 'alert';
+  name: IconName;
   size?: number;
+  strokeWidth?: number;
 }
 
-const paths: Record<IconProps['name'], string> = {
-  spark: 'M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7L12 2z',
-  write: 'M4 20l4.2-1 10.9-10.9a2.2 2.2 0 0 0-3.2-3.2L5 15.8 4 20zm9.8-13.2l3.4 3.4M4 20h5',
-  history: 'M4 12a8 8 0 1 0 2.3-5.7L4 8.6M4 4v4.6h4.6M12 7v5l3 2',
-  settings: 'M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zm8-3.2a8 8 0 0 0-.1-1.1l2-1.6-2-3.4-2.4 1a8 8 0 0 0-1.9-1.1L15.3 3h-4l-.4 2.8a8 8 0 0 0-1.9 1.1l-2.4-1-2 3.4 2 1.6a8 8 0 0 0 0 2.2l-2 1.6 2 3.4 2.4-1a8 8 0 0 0 1.9 1.1l.4 2.8h4l.4-2.8a8 8 0 0 0 1.9-1.1l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2z',
-  copy: 'M8 8V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3M6 8h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2z',
-  replace: 'M4 7h10a4 4 0 0 1 4 4v6M4 7l3-3M4 7l3 3M20 17H10a4 4 0 0 1-4-4V7M20 17l-3-3M20 17l-3 3',
-  stop: 'M7 7h10v10H7z',
-  retry: 'M20 11a8 8 0 0 0-14.5-4.6L4 8M4 4v4h4M4 13a8 8 0 0 0 14.5 4.6L20 16m0 4v-4h-4',
-  refresh: 'M20 11a8 8 0 0 0-14.9-4M4 5v4h4M4 13a8 8 0 0 0 14.9 4M20 19v-4h-4',
-  trash: 'M5 7h14M10 11v5M14 11v5M7 7l1 13h8l1-13M9 7V4h6v3',
-  arrow: 'M5 12h14M13 6l6 6-6 6',
-  check: 'M5 12l4 4L19 6',
-  alert: 'M12 4l9 16H3L12 4zm0 5v5m0 3h.01',
+const shapes: Record<IconName, ReactNode> = {
+  spark: (
+    <>
+      <path d="M10 3.5l1.7 4.8 4.8 1.7-4.8 1.7L10 16.5 8.3 11.7 3.5 10l4.8-1.7L10 3.5z" />
+      <path d="M17 15.5l.85 2.4 2.4.85-2.4.85-.85 2.4-.85-2.4-2.4-.85 2.4-.85.85-2.4z" />
+    </>
+  ),
+  write: (
+    <>
+      <path d="M17.2 3.2a2.1 2.1 0 0 1 3 3L8 18.4 3.5 20l1.6-4.5L17.2 3.2z" />
+      <path d="M15.6 4.8l3.6 3.6" />
+    </>
+  ),
+  history: (
+    <>
+      <path d="M8.99 3.73A8.8 8.8 0 1 1 4.02 8.28" />
+      <path d="M3.2 3.4v5.2h5.2" />
+      <path d="M12 7.2V12l3.2 1.9" />
+    </>
+  ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M20.6 8.87L22.65 9.93L22.65 14.07L20.6 15.13L20.29 15.87L21 18.07L18.07 21L15.87 20.29L15.13 20.6L14.07 22.65L9.93 22.65L8.87 20.6L8.13 20.29L5.93 21L3 18.07L3.71 15.87L3.4 15.13L1.35 14.07L1.35 9.93L3.4 8.87L3.71 8.13L3 5.93L5.93 3L8.13 3.71L8.87 3.4L9.93 1.35L14.07 1.35L15.13 3.4L15.87 3.71L18.07 3L21 5.93L20.29 8.13z" />
+    </>
+  ),
+  connection: (
+    <>
+      <path d="M9.5 17.5H7.8A5.3 5.3 0 0 1 7.8 6.9h1.7" />
+      <path d="M14.5 6.5h1.7a5.3 5.3 0 0 1 0 10.6h-1.7" />
+      <path d="M8.4 12h7.2" />
+    </>
+  ),
+  recipe: (
+    <>
+      <path d="M4 7.2h16" />
+      <path d="M4 12h16" />
+      <path d="M4 16.8h16" />
+      <circle cx="9" cy="7.2" r="2.1" />
+      <circle cx="15.4" cy="12" r="2.1" />
+      <circle cx="7.6" cy="16.8" r="2.1" />
+    </>
+  ),
+  appearance: <path d="M12 3.4a6.4 6.4 0 0 0 8.9 8.9 8.9 8.9 0 1 1-8.9-8.9z" />,
+  privacy: (
+    <>
+      <path d="M12 3.2l7 2.8v5.2c0 4.2-2.9 8-7 9.6-4.1-1.6-7-5.4-7-9.6V6l7-2.8z" />
+      <path d="M9.2 12.1l2 2 3.6-3.7" />
+    </>
+  ),
+  data: (
+    <>
+      <ellipse cx="12" cy="6" rx="7.4" ry="3" />
+      <path d="M4.6 6v12c0 1.7 3.3 3 7.4 3s7.4-1.3 7.4-3V6" />
+      <path d="M4.6 12c0 1.7 3.3 3 7.4 3s7.4-1.3 7.4-3" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="9" y="9" width="11.4" height="11.4" rx="2.2" />
+      <path d="M15.4 5.6A2.2 2.2 0 0 0 13.2 4H5.8A1.8 1.8 0 0 0 4 5.8v7.4a2.2 2.2 0 0 0 1.6 2.2" />
+    </>
+  ),
+  replace: (
+    <>
+      <path d="M3.5 7.5h11a4 4 0 0 1 4 4v5" />
+      <path d="M3.5 7.5l3.2-3.2" />
+      <path d="M3.5 7.5l3.2 3.2" />
+      <path d="M20.5 16.5h-11a4 4 0 0 1-4-4v-5" />
+      <path d="M20.5 16.5l-3.2-3.2" />
+      <path d="M20.5 16.5l-3.2 3.2" />
+    </>
+  ),
+  stop: <rect x="6.4" y="6.4" width="11.2" height="11.2" rx="1.8" fill="currentColor" stroke="none" />,
+  retry: (
+    <>
+      <path d="M8.99 3.73A8.8 8.8 0 1 1 4.02 8.28" />
+      <path d="M3.2 3.4v5.2h5.2" />
+    </>
+  ),
+  refresh: (
+    <>
+      <path d="M19.98 8.28A8.8 8.8 0 1 1 15.01 3.73" />
+      <path d="M20.6 3.4v5.2h-5.2" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M3.8 6.4h16.4" />
+      <path d="M18.6 6.4V19a2 2 0 0 1-2 2H7.4a2 2 0 0 1-2-2V6.4" />
+      <path d="M9.2 6.4V4.6A1.6 1.6 0 0 1 10.8 3h2.4a1.6 1.6 0 0 1 1.6 1.6v1.8" />
+      <path d="M10.2 11v5.6" />
+      <path d="M13.8 11v5.6" />
+    </>
+  ),
+  arrow: (
+    <>
+      <path d="M4.5 12h15" />
+      <path d="M13.2 5.7l6.3 6.3-6.3 6.3" />
+    </>
+  ),
+  check: <path d="M20 6.5L9.4 17.1 4 11.7" />,
+  alert: (
+    <>
+      <path d="M10.7 4.3L2.9 17.6A2 2 0 0 0 4.6 20.6h14.8a2 2 0 0 0 1.7-3L13.3 4.3a2 2 0 0 0-3.4 0z" />
+      <path d="M12 9.4v3.8" />
+      <path d="M12 16.6h.01" />
+    </>
+  ),
 };
 
-export function Icon({ name, size = 18 }: IconProps) {
+export function Icon({ name, size = 18, strokeWidth = 1.7 }: IconProps) {
   return (
-    <svg className="icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={paths[name]} />
+    <svg
+      className="icon"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {shapes[name]}
     </svg>
   );
 }

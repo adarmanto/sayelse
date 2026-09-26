@@ -1,6 +1,13 @@
-import { MAX_SOURCE_CHARS } from '../lib/constants';
+import { MAX_SOURCE_CHARS, SETTINGS_STORAGE_KEY } from '../lib/constants';
 import { captureSelectionInPage, replaceSelectionInPage } from '../lib/browser/injection';
 import { calculateInlinePopupLayout } from '../lib/browser/inlineLayout';
+import {
+  INLINE_THEME_TOKENS,
+  inlineThemeStylesheet,
+  resolveTheme,
+  type ResolvedTheme,
+} from '../lib/browser/inlineTheme';
+import { getSettings } from '../lib/storage/settings';
 import { INLINE_ACTIONS, INLINE_ALTERNATIVES } from '../lib/browser/inlineActions';
 import {
   inlineRewriteProgressMessageSchema,
@@ -19,6 +26,30 @@ let lastFingerprint = '';
 let activeRequestId: string | null = null;
 let activeCapture: SelectionCapture | null = null;
 let activePosition: InlinePosition | null = null;
+let prefersLight = false;
+let currentTheme: ResolvedTheme = 'dark';
+
+function applyTheme(resolved: ResolvedTheme): void {
+  currentTheme = resolved;
+  if (!host) return;
+  for (const [property, value] of Object.entries(INLINE_THEME_TOKENS[resolved])) {
+    host.style.setProperty(property, value);
+  }
+}
+
+async function syncTheme(): Promise<void> {
+  const settings = await getSettings();
+  applyTheme(resolveTheme(settings.theme, prefersLight));
+}
+
+function watchColorScheme(): void {
+  const query = window.matchMedia('(prefers-color-scheme: light)');
+  prefersLight = query.matches;
+  query.addEventListener('change', (event) => {
+    prefersLight = event.matches;
+    void syncTheme();
+  });
+}
 
 export function hideMenu(): void {
   if (activeRequestId) {
@@ -92,53 +123,12 @@ function createBaseHost(): { root: ShadowRoot; popup: HTMLDivElement } {
   shadow = host.attachShadow({ mode: 'open' });
 
   const style = document.createElement('style');
-  style.textContent = `
-    :host { all: initial; }
-    * { box-sizing: border-box; }
-    .menu, .result { width: 100%; border: 1px solid #4a3e37; border-radius: 12px; background: #211f1d; box-shadow: 0 10px 30px rgba(0,0,0,.32); color: #f5eee5; font: 500 12px/1.2 system-ui, sans-serif; }
-    .menu { display: block; width: max-content; max-width: 100%; }
-    .inline-header { display: flex; align-items: stretch; gap: 2px; width: max-content; max-width: 100%; min-height: 42px; padding: 4px; }
-    .brand { display: flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 8px 0 6px; border-right: 1px solid #3b3632; color: #e88b63; font-weight: 700; white-space: nowrap; }
-    .mark { font-size: 15px; }
-    button { appearance: none; min-height: 34px; padding: 0 10px; border: 0; border-radius: 8px; color: #d8cec5; background: transparent; cursor: pointer; font: inherit; font-weight: 600; white-space: nowrap; }
-    button:hover, button:focus-visible { color: #fff8f2; background: rgba(232,139,99,.15); outline: none; box-shadow: inset 0 0 0 2px #f6ad84; }
-    .result { max-height: var(--sayelse-max-height); overflow: clip; padding: 0; }
-    .result.requires-scroll { overflow-x: clip; overflow-y: auto; scrollbar-width: none; }
-    .result.requires-scroll::-webkit-scrollbar, .action-tabs::-webkit-scrollbar { width: 0; height: 0; }
-    .result-header { position: sticky; top: 0; z-index: 1; background: #211f1d; }
-    .result-header .brand { flex: 0 0 auto; }
-    .result-header .action-tabs { position: static; flex: 1 1 auto; min-width: 0; width: auto; max-width: 100%; background: transparent; }
-    .action-tabs { display: flex; width: max-content; max-width: 100%; gap: 2px; overflow-x: auto; scrollbar-width: none; }
-    .action-button { min-height: 34px; padding: 0 10px; border: 1px solid transparent; border-radius: 8px; color: #b9aea4; background: transparent; }
-    .action-button:hover, .action-button:focus-visible { color: #fff8f2; background: rgba(232,139,99,.15); }
-    .action-button[aria-selected="true"] { color: #2a1710; border-color: #e88b63; background: #e88b63; }
-    .action-button[aria-selected="true"]:hover, .action-button[aria-selected="true"]:focus-visible { background: #f0a27d; box-shadow: inset 0 0 0 2px #ffe0ce; }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: #e88b63; animation: pulse 1.1s ease-in-out infinite; }
-    .text { margin: 0 10px 10px; color: #f5eee5; font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .alternatives { display: grid; grid-template-columns: 1fr; gap: 6px; padding: 0 10px 10px; }
-    .alternative { display: grid; gap: 4px; width: 100%; min-width: 0; min-height: 62px; padding: 9px; border: 1px solid #4a3e37; border-radius: 9px; text-align: left; white-space: normal; }
-    .alternative:hover, .alternative:focus-visible { background: rgba(232,139,99,.12); border-color: #e88b63; }
-    .alternative-text { color: #f5eee5; font-size: 12px; font-weight: 500; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .loading { display: grid; gap: 4px; padding: 9px; border: 1px solid #3b3632; border-radius: 9px; }
-    .loading .alternative-text { color: #93877d; font-style: italic; }
-    .pending { color: #93877d; font-style: italic; }
-    .error { color: #e58d82; }
-    .actions { display: flex; gap: 5px; margin: 0 10px 10px; }
-    .actions button { border: 1px solid #4a3e37; }
-    @keyframes pulse { 0%,100% { opacity:.45; transform:scale(.85) } 50% { opacity:1; transform:scale(1.15) } }
-    @media (max-width: 680px) {
-      .alternatives { grid-template-columns: 1fr; }
-      .brand { padding-right: 5px; }
-      .action-button { padding: 0 7px; font-size: 11px; }
-      .result-header { overflow: hidden; }
-      .action-tabs { gap: 2px; }
-    }
-    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-  `;
+  style.textContent = inlineThemeStylesheet();
   const popup = document.createElement('div');
   popup.className = 'menu';
   shadow.append(style, popup);
   document.documentElement.append(host);
+  applyTheme(currentTheme);
   return { root: shadow, popup };
 }
 
@@ -372,6 +362,13 @@ export default defineContentScript({
   matches: ['http://*/*', 'https://*/*'],
   runAt: 'document_idle',
   main() {
+    watchColorScheme();
+    void syncTheme();
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName !== 'local' || !changes[SETTINGS_STORAGE_KEY]) return;
+      void syncTheme();
+    });
+
     chrome.runtime.onMessage.addListener((message: unknown) => {
       const parsed = inlineRewriteProgressMessageSchema.safeParse(message);
       if (!parsed.success) return;

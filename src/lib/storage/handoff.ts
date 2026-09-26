@@ -16,7 +16,3 @@ export async function consumeSelectionHandoff(area: StorageAreaLike): Promise<Se
   await area.remove(HANDOFF_STORAGE_KEY);
   return parsed.success ? parsed.data : null;
 }
-
-export async function clearSelectionHandoff(area: StorageAreaLike): Promise<void> {
-  await area.remove(HANDOFF_STORAGE_KEY);
-}

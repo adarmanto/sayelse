@@ -16,6 +16,7 @@ export default defineConfig({
       'storage',
     ],
     host_permissions: ['http://127.0.0.1/*'],
+    optional_host_permissions: ['http://*/*', 'https://*/*'],
     action: {
       default_title: 'Open SayElse',
     },

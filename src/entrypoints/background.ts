@@ -2,7 +2,7 @@ import { MAX_SOURCE_CHARS } from '../lib/constants';
 import { captureSelectionInPage, parseCaptureResult, replaceSelectionInPage } from '../lib/browser/injection';
 import { saveSelectionHandoff } from '../lib/storage/handoff';
 import { getLocalArea, getSessionArea, getSettings } from '../lib/storage/settings';
-import { streamChat } from '../lib/api/nineRouter';
+import { streamChat } from '../lib/api/openaiCompatible';
 import { generateInlineAlternatives } from '../lib/browser/inlineRewrite';
 import {
   cancelInlineRewriteMessageSchema,
@@ -41,7 +41,7 @@ async function runInlineRewrite(
   try {
     const settings = await getSettings(getLocalArea());
     if (!settings.selectedModel) {
-      throw new Error('Choose a 9Router model in SayElse Settings first.');
+      throw new Error('Choose a model in SayElse Settings first.');
     }
     const model = settings.selectedModel;
     const alternatives = await generateInlineAlternatives({
@@ -53,8 +53,9 @@ async function runInlineRewrite(
         length: request.length,
       },
       generate: (messages) => streamChat({
+        baseUrl: settings.baseUrl,
+        apiKey: settings.apiKey,
         model,
-        token: settings.token,
         messages,
         signal: controller.signal,
       }),

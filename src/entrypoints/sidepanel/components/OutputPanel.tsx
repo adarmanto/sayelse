@@ -43,7 +43,7 @@ export function OutputPanel({ result, status, error, canReplace, copied, onGener
         <div className="result-empty">
           <div className="empty-mark"><Icon name="arrow" size={22} /></div>
           <h3>Your next version starts here</h3>
-          <p>Choose a recipe, then let your local 9Router model do the first pass.</p>
+          <p>Choose a recipe, then let your model do the first pass.</p>
           <button className="primary-button" type="button" onClick={onGenerate}>
             <Icon name="spark" size={16} /> Rewrite text
           </button>

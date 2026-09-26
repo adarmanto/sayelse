@@ -1,16 +1,6 @@
-type PageCapture = {
-  version: 1;
-  kind: 'input' | 'textarea' | 'contenteditable' | 'text';
-  source: string;
-  start: number;
-  end: number;
-  elementPath: number[];
-  startNodePath?: number[];
-  endNodePath?: number[];
-  startOffset?: number;
-  endOffset?: number;
-  replaceable: boolean;
-};
+import { selectionCaptureSchema, type SelectionCapture } from '../storage/schema';
+
+type PageCapture = SelectionCapture;
 
 export function captureSelectionInPage(maxSourceChars: number): PageCapture | null {
   const pathFromDocumentRoot = (node: Node): number[] => {
@@ -132,4 +122,9 @@ export function replaceSelectionInPage(capture: PageCapture | null, replacement:
   }
 
   return false;
+}
+
+export function parseCaptureResult(value: unknown): SelectionCapture | null {
+  const parsed = selectionCaptureSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }

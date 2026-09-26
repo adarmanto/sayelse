@@ -1,7 +1,7 @@
 {
   "name": "sayelse",
   "version": "0.1.0",
-  "description": "A local-first Chrome extension for rewriting selected text through a 9Router instance on your own machine.",
+  "description": "A local-first Chrome extension for rewriting selected text through any OpenAI-compatible endpoint.",
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@10.13.1",

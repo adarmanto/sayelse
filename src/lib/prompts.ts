@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import {
   LENGTHS,
   MAX_SOURCE_CHARS,
@@ -23,9 +22,6 @@ export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
-
-export const ALTERNATIVE_VARIATIONS = ['closest', 'distinct'] as const;
-export type AlternativeVariation = (typeof ALTERNATIVE_VARIATIONS)[number];
 
 const alternativeInstructions = `Return exactly two distinct alternatives. The first must stay close to the source wording. The second must use more distinctive phrasing while preserving every fact.
 Use this exact format with no markdown or commentary:
@@ -111,13 +107,7 @@ export function buildRewriteMessages(request: RewriteRequest): ChatMessage[] {
   ];
 }
 
-export function buildAlternativeMessages(
-  request: RewriteRequest,
-  variation?: AlternativeVariation,
-): ChatMessage[] {
-  if (variation && !ALTERNATIVE_VARIATIONS.includes(variation)) {
-    throw new Error('Unsupported alternative variation');
-  }
+export function buildAlternativeMessages(request: RewriteRequest): ChatMessage[] {
   const messages = buildRewriteMessages(request);
   const systemMessage = messages[0];
   const userMessage = messages[1];
@@ -136,8 +126,3 @@ export function buildAlternativeMessages(
     userMessage,
   ];
 }
-
-export const chatMessageSchema = z.object({
-  role: z.enum(['system', 'user', 'assistant']),
-  content: z.string(),
-});

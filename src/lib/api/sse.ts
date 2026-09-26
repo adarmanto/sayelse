@@ -55,11 +55,13 @@ export async function* readSseEvents(stream: ReadableStream<Uint8Array>): AsyncG
   const reader = stream.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let completed = false;
 
   try {
     while (true) {
       const { value, done } = await reader.read();
       if (done) {
+        completed = true;
         break;
       }
       if (value) {
@@ -72,12 +74,18 @@ export async function* readSseEvents(stream: ReadableStream<Uint8Array>): AsyncG
       }
     }
 
-    buffer += decoder.decode();
-    const trailingEvent = consumeEvent(buffer);
-    if (trailingEvent) {
-      yield trailingEvent;
+    if (completed) {
+      buffer += decoder.decode();
+      const trailingEvent = consumeEvent(buffer);
+      if (trailingEvent) {
+        yield trailingEvent;
+      }
     }
   } finally {
-    reader.releaseLock();
+    if (completed) {
+      reader.releaseLock();
+    } else {
+      await reader.cancel().catch(() => undefined);
+    }
   }
 }

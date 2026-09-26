@@ -1,6 +1,6 @@
 import { browser } from 'wxt/browser';
 import { SETTINGS_STORAGE_KEY } from '../constants';
-import { getDefaultSettings, settingsSchema, type Settings } from './schema';
+import { getDefaultSettings, migrateSettings, settingsSchema, type Settings } from './schema';
 
 export interface StorageAreaLike {
   get(keys?: string | string[] | null): Promise<Record<string, unknown>>;
@@ -19,8 +19,16 @@ export function getSessionArea(): StorageAreaLike {
 
 export async function getSettings(area: StorageAreaLike = getLocalArea()): Promise<Settings> {
   const values = await area.get(SETTINGS_STORAGE_KEY);
-  const parsed = settingsSchema.safeParse(values[SETTINGS_STORAGE_KEY]);
-  return parsed.success ? parsed.data : getDefaultSettings();
+  const raw = values[SETTINGS_STORAGE_KEY];
+  if (settingsSchema.safeParse(raw).success) {
+    return raw as Settings;
+  }
+  const parsed = settingsSchema.safeParse(migrateSettings(raw));
+  if (!parsed.success) {
+    return getDefaultSettings();
+  }
+  await area.set({ [SETTINGS_STORAGE_KEY]: parsed.data });
+  return parsed.data;
 }
 
 export async function saveSettings(settings: Settings, area: StorageAreaLike = getLocalArea()): Promise<void> {
