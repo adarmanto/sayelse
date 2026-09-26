@@ -56,6 +56,8 @@ Press **Save endpoint**. Chrome asks permission to reach that host the first tim
 
 SayElse then calls `GET {base}/models` to populate the model list and `POST {base}/chat/completions` for every rewrite, streaming responses as they arrive. Changing the endpoint refreshes the model list automatically.
 
+The model list is only a suggestion. Some servers will route a model they never advertise, so **Custom model ID…** lets you type any ID and SayElse checks it by making a real, minimal request to your endpoint before saving it. A model that answers is accepted even when it is absent from the list.
+
 A local server is not the same as local inference. Your server may forward your text to whichever provider it is configured with, and SayElse has no way to see or control that. Review your setup before sending anything sensitive.
 
 ## Commands

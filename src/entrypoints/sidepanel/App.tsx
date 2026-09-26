@@ -4,7 +4,7 @@ import {
   DEFAULT_SETTINGS,
   type Theme,
 } from '../../lib/constants';
-import { listModels, type EndpointConfig } from '../../lib/api/openaiCompatible';
+import { listModels, probeModel, type EndpointConfig } from '../../lib/api/openaiCompatible';
 import { normaliseBaseUrl } from '../../lib/api/endpoint';
 import { grantEndpointAccess, type PermissionsLike } from '../../lib/browser/permissions';
 import { resolveTheme } from '../../lib/browser/inlineTheme';
@@ -37,6 +37,7 @@ export default function App() {
   const [status, setStatus] = useState<GenerationStatus>('idle');
   const [error, setError] = useState<GenerationError | null>(null);
   const [models, setModels] = useState<string[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('checking');
   const [handoff, setHandoff] = useState<Awaited<ReturnType<typeof consumeSelectionHandoff>>>(null);
   const [copied, setCopied] = useState(false);
@@ -47,13 +48,14 @@ export default function App() {
 
   const refreshModels = useCallback(async (endpoint: EndpointConfig) => {
     setConnectionStatus('checking');
+    setModelsLoading(true);
     try {
       const nextModels = await listModels(endpoint);
       setModels(nextModels);
       setConnectionStatus('online');
       if (nextModels.length > 0) {
         setSettings((current) => {
-          if (current.selectedModel && nextModels.includes(current.selectedModel)) return current;
+          if (current.selectedModel) return current;
           const firstModel = nextModels[0];
           if (!firstModel) return current;
           const next: Settings = { ...current, selectedModel: firstModel };
@@ -64,6 +66,8 @@ export default function App() {
     } catch {
       setModels([]);
       setConnectionStatus('offline');
+    } finally {
+      setModelsLoading(false);
     }
   }, []);
 
@@ -153,6 +157,30 @@ export default function App() {
     void refreshModels({ baseUrl: normalised.value, apiKey: next.apiKey });
     return null;
   }, [refreshModels]);
+
+  const saveModel = useCallback(async (model: string): Promise<string | null> => {
+    const next: Settings = { ...settingsRef.current, selectedModel: model };
+    settingsRef.current = next;
+    setSettings(next);
+    try {
+      await saveSettings(next);
+    } catch {
+      return 'The model could not be saved.';
+    }
+    return null;
+  }, []);
+
+  // The advertised model list is not authoritative, so existence is settled by
+  // calling the model. The endpoint is passed in rather than read from storage
+  // so the check runs against the connection currently on screen, without
+  // making the user save it first.
+  const checkModel = useCallback(async (
+    model: string,
+    endpoint: { baseUrl: string; apiKey: string },
+  ): Promise<{ ok: boolean; message?: string }> => {
+    const probe = await probeModel({ baseUrl: endpoint.baseUrl, apiKey: endpoint.apiKey, model });
+    return probe.ok ? { ok: true } : { ok: false, message: probe.message };
+  }, []);
 
   const generate = useCallback(async () => {
     if (!source.trim()) {
@@ -279,7 +307,7 @@ export default function App() {
             <OutputPanel result={result} status={status} error={error} canReplace={canReplace} copied={copied} onGenerate={() => void generate()} onStop={stop} onRetry={() => void generate()} onCopy={() => void copyText(result)} onReplace={() => void replace()} hasSource={Boolean(source.trim())} />
           </div>
         </>}
-        {view === 'settings' && <SettingsView settings={settings} models={models} onSettingsChange={updateSettings} onRefreshModels={() => void refreshModels({ baseUrl: settings.baseUrl, apiKey: settings.apiKey })} onSaveConnection={saveConnection} />}
+        {view === 'settings' && <SettingsView settings={settings} models={models} modelsLoading={modelsLoading} onSettingsChange={updateSettings} onRefreshModels={() => void refreshModels({ baseUrl: settings.baseUrl, apiKey: settings.apiKey })} onSaveConnection={saveConnection} onSaveModel={saveModel} onCheckModel={checkModel} />}
       </main>
 
       <footer className="app-footer"><span><span className="footer-dot" /> No account</span><span>Text goes to your endpoint</span></footer>

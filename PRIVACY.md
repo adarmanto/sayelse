@@ -16,6 +16,8 @@ When you select editable text and invoke SayElse, the extension processes:
 
 Selected text is sent to the endpoint URL you configured when you start a rewrite. SayElse contacts no other server. That endpoint may forward the text to a model provider you did not choose, and SayElse cannot see or control what happens there, so review your server's configuration and its provider's privacy policy before sending anything sensitive.
 
+Saving a model also sends a request to the same endpoint. It carries the model ID and a fixed placeholder message, never any text of yours, and it exists so an unlisted model can be verified before it is stored.
+
 ## What is stored
 
 Chrome local extension storage holds:

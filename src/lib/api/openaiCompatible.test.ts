@@ -1,4 +1,4 @@
-import { ApiError, listModels, streamChat } from './openaiCompatible';
+import { ApiError, listModels, probeModel, streamChat } from './openaiCompatible';
 
 function makeStream(chunks: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -82,6 +82,90 @@ describe('listModels', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('failed to fetch')));
 
     await expect(listModels(ENDPOINT)).rejects.toThrow(/api\.example\.com/);
+    vi.unstubAllGlobals();
+  });
+});
+
+describe('probeModel', () => {
+  it('confirms a model the endpoint accepts', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockJsonResponse({ id: 'resp_1' })));
+
+    expect(await probeModel({ ...ENDPOINT, model: 'oc/muse-spark-1.3-contributor-free' })).toEqual({ ok: true });
+    vi.unstubAllGlobals();
+  });
+
+  it('calls chat completions rather than trusting the models list', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(mockJsonResponse({ id: 'resp_1' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await probeModel({ ...ENDPOINT, model: 'unlisted-model' });
+
+    expect(lastRequest(fetchMock).url).toBe('https://api.example.com/v1/chat/completions');
+    expect(JSON.parse(String(lastRequest(fetchMock).init.body)).model).toBe('unlisted-model');
+    vi.unstubAllGlobals();
+  });
+
+  it('caps the completion so the check stays cheap', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(mockJsonResponse({ id: 'resp_1' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await probeModel({ ...ENDPOINT, model: 'm' });
+
+    expect(JSON.parse(String(lastRequest(fetchMock).init.body)).max_tokens).toBe(16);
+    vi.unstubAllGlobals();
+  });
+
+  it('retries without the cap when a provider rejects the token floor', async () => {
+    // A real gateway forwards max_tokens to a provider that demands >= 16 and
+    // answers 400. Reporting that as a missing model would be wrong, so the
+    // cap is dropped and the routing result is what decides.
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('max_output_tokens The number must be >= 16', { status: 400 }))
+      .mockResolvedValueOnce(mockJsonResponse({ id: 'resp_1' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    expect(await probeModel({ ...ENDPOINT, model: 'oc/muse-spark-1.3-contributor-free' })).toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(String(lastRequest(fetchMock).init.body))).not.toHaveProperty('max_tokens');
+    vi.unstubAllGlobals();
+  });
+
+  it('does not retry a rejection that is about the model', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('nope', { status: 404 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await probeModel({ ...ENDPOINT, model: 'opuss' });
+
+    expect(result).toMatchObject({ code: 'model' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    vi.unstubAllGlobals();
+  });
+
+  it('reports an unknown model as a model error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('nope', { status: 404 })));
+
+    const result = await probeModel({ ...ENDPOINT, model: 'opuss' });
+
+    expect(result.ok).toBe(false);
+    expect(result).toMatchObject({ code: 'model' });
+    vi.unstubAllGlobals();
+  });
+
+  it('reports a rejected key instead of a missing model', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('nope', { status: 401 })));
+
+    const result = await probeModel({ ...ENDPOINT, model: 'oc/muse-spark-1.3-contributor-free' });
+
+    expect(result).toMatchObject({ code: 'authentication' });
+    vi.unstubAllGlobals();
+  });
+
+  it('reports an unreachable endpoint rather than throwing', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('failed to fetch')));
+
+    const result = await probeModel({ ...ENDPOINT, model: 'm' });
+
+    expect(result).toMatchObject({ code: 'connection' });
     vi.unstubAllGlobals();
   });
 });

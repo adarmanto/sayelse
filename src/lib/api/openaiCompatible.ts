@@ -97,7 +97,9 @@ function mapHttpError(status: number, label: string): ApiError {
     return new ApiError(`${label} is busy or the selected model is rate limited. Try again later.`, 'rate_limit', status);
   }
   if (status === 404) {
-    return new ApiError(`${label} could not find that model. Refresh models in Settings.`, 'model', status);
+    // No advice to refresh: the advertised list is not authoritative, so a
+    // refresh would not have found this model either.
+    return new ApiError(`${label} does not have that model.`, 'model', status);
   }
   if (status >= 500) {
     return new ApiError(`${label} returned a temporary server error. Try again.`, 'server', status);
@@ -140,6 +142,102 @@ export async function listModels(options: ListModelsOptions): Promise<string[]> 
   } finally {
     timeout.cleanup();
   }
+}
+
+export interface ProbeOptions extends EndpointConfig {
+  model: string;
+  signal?: AbortSignal;
+}
+
+export type ModelProbe =
+  | { ok: true }
+  | { ok: false; code: ApiErrorCode; message: string };
+
+type ProbeResult =
+  | { ok: true }
+  | { ok: false; code: ApiErrorCode; message: string; capRejected: boolean };
+
+/** Smallest cap the providers behind common gateways accept. */
+const PROBE_MAX_TOKENS = 16;
+
+/**
+ * True when a rejection is about the token cap rather than the model, so the
+ * caller can drop the cap and ask again instead of blaming the model ID.
+ */
+function isTokenCapRejection(status: number, body: string): boolean {
+  if (status !== 400 && status !== 422) {
+    return false;
+  }
+  return /max_(output_)?tokens/i.test(body);
+}
+
+async function sendProbe(
+  options: ProbeOptions,
+  label: string,
+  maxTokens: number | undefined,
+): Promise<ProbeResult> {
+  const timeout = withTimeout(options.signal, MODEL_DISCOVERY_TIMEOUT_MS);
+  try {
+    const body: Record<string, unknown> = {
+      model: options.model,
+      messages: [{ role: 'user', content: 'ping' }],
+      stream: false,
+    };
+    if (maxTokens !== undefined) {
+      body.max_tokens = maxTokens;
+    }
+    const response = await fetch(`${options.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: authHeaders(options.apiKey),
+      body: JSON.stringify(body),
+      signal: timeout.signal,
+    });
+    if (response.ok) {
+      return { ok: true };
+    }
+    const capRejected = maxTokens !== undefined && isTokenCapRejection(response.status, await response.text());
+    const error = mapHttpError(response.status, label);
+    return { ok: false, code: error.code, message: error.message, capRejected };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return { ok: false, code: error.code, message: error.message, capRejected: false };
+    }
+    if (timeout.signal.aborted) {
+      if (options.signal?.aborted) {
+        return { ok: false, code: 'cancelled', message: 'The model check was cancelled.', capRejected: false };
+      }
+      const message = `Model check timed out. Check that ${label} is reachable.`;
+      return { ok: false, code: 'timeout', message, capRejected: false };
+    }
+    return { ok: false, code: 'connection', message: `Could not connect to ${label}.`, capRejected: false };
+  } finally {
+    timeout.cleanup();
+  }
+}
+
+/**
+ * Asks the endpoint whether a model exists by actually calling it, because the
+ * advertised `/models` list is not authoritative: a gateway can route a model
+ * that it never advertises, and hide a typo'd one behind an unprefixed
+ * fallback. The request is a non-streaming completion so it resolves through
+ * the real routing path.
+ *
+ * A token cap keeps the check cheap, but gateways forward it to providers with
+ * their own floors, and one in use rejects anything below 16. So a rejection
+ * that names the cap is retried without one rather than reported as a missing
+ * model, and the answer is the routing result either way.
+ */
+export async function probeModel(options: ProbeOptions): Promise<ModelProbe> {
+  const label = providerLabel(options.baseUrl);
+  const capped = await sendProbe(options, label, PROBE_MAX_TOKENS);
+  if (capped.ok) {
+    return { ok: true };
+  }
+  if (capped.capRejected && !options.signal?.aborted) {
+    const uncapped = await sendProbe(options, label, undefined);
+    return uncapped.ok ? { ok: true } : { ok: false, code: uncapped.code, message: uncapped.message };
+  }
+  return { ok: false, code: capped.code, message: capped.message };
 }
 
 export interface StreamOptions extends EndpointConfig {

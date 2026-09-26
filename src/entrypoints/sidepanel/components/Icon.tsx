@@ -19,6 +19,7 @@ interface IconProps {
   name: IconName;
   size?: number;
   strokeWidth?: number;
+  className?: string;
 }
 
 const shapes: Record<IconName, ReactNode> = {
@@ -93,10 +94,10 @@ const shapes: Record<IconName, ReactNode> = {
   ),
 };
 
-export function Icon({ name, size = 18, strokeWidth = 1.7 }: IconProps) {
+export function Icon({ name, size = 18, strokeWidth = 1.7, className }: IconProps) {
   return (
     <svg
-      className="icon"
+      className={className ? `icon ${className}` : 'icon'}
       width={size}
       height={size}
       viewBox="0 0 24 24"
