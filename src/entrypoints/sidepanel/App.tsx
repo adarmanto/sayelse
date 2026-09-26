@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { browser } from 'wxt/browser';
 import {
   DEFAULT_SETTINGS,
+  HANDOFF_STORAGE_KEY,
   type Theme,
 } from '../../lib/constants';
 import { listModels, probeModel, type EndpointConfig } from '../../lib/api/openaiCompatible';
@@ -39,37 +40,64 @@ export default function App() {
   const [models, setModels] = useState<string[]>([]);
   const [modelsLoading, setModelsLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('checking');
+  const [loaded, setLoaded] = useState(false);
   const [handoff, setHandoff] = useState<Awaited<ReturnType<typeof consumeSelectionHandoff>>>(null);
   const [copied, setCopied] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
-  const loadedRef = useRef(false);
   const settingsRef = useRef<Settings>(getDefaultSettings());
+  const modelsAbortRef = useRef<AbortController | null>(null);
+  const inFlightModelsRef = useRef<string | null>(null);
 
+  // Single writer for settings. The ref is the authority that the save paths
+  // spread from, so it must move with state on every write or the next save
+  // rolls the field back.
+  const commitSettings = useCallback((next: Settings) => {
+    settingsRef.current = next;
+    setSettings(next);
+  }, []);
+
+  // The one path that fetches the model list. An in-flight request for the
+  // same endpoint is reused, so saving a connection or changing the API key
+  // does not issue a second identical /models call, and a superseded request
+  // cannot overwrite a newer result.
   const refreshModels = useCallback(async (endpoint: EndpointConfig) => {
+    const key = `${endpoint.baseUrl}\n${endpoint.apiKey}`;
+    if (modelsAbortRef.current && inFlightModelsRef.current === key) {
+      return;
+    }
+    modelsAbortRef.current?.abort();
+    const controller = new AbortController();
+    modelsAbortRef.current = controller;
+    inFlightModelsRef.current = key;
+
     setConnectionStatus('checking');
     setModelsLoading(true);
     try {
-      const nextModels = await listModels(endpoint);
+      const nextModels = await listModels({ ...endpoint, signal: controller.signal });
+      if (modelsAbortRef.current !== controller) return;
       setModels(nextModels);
       setConnectionStatus('online');
-      if (nextModels.length > 0) {
-        setSettings((current) => {
-          if (current.selectedModel) return current;
-          const firstModel = nextModels[0];
-          if (!firstModel) return current;
-          const next: Settings = { ...current, selectedModel: firstModel };
-          void saveSettings(next);
-          return next;
-        });
+      // Seeds a first-run default only. An existing selection is never
+      // overwritten here: the list is a convenience, not an authority on
+      // which model the user actually runs.
+      const firstModel = nextModels[0];
+      if (firstModel && !settingsRef.current.selectedModel) {
+        commitSettings({ ...settingsRef.current, selectedModel: firstModel });
+        void saveSettings(settingsRef.current).catch(() => undefined);
       }
     } catch {
+      if (modelsAbortRef.current !== controller) return;
       setModels([]);
       setConnectionStatus('offline');
     } finally {
-      setModelsLoading(false);
+      if (modelsAbortRef.current === controller) {
+        modelsAbortRef.current = null;
+        inFlightModelsRef.current = null;
+        setModelsLoading(false);
+      }
     }
-  }, []);
+  }, [commitSettings]);
 
   useEffect(() => {
     let active = true;
@@ -82,6 +110,7 @@ export default function App() {
       settingsRef.current = nextSettings;
       setSettings(nextSettings);
       setControls(nextSettings.defaults);
+      setLoaded(true);
       setHandoff(nextHandoff);
       if (nextHandoff) {
         setSource(nextHandoff.source);
@@ -93,22 +122,20 @@ export default function App() {
           });
         }
       }
-      void refreshModels({ baseUrl: nextSettings.baseUrl, apiKey: nextSettings.apiKey });
     })();
     return () => { active = false; abortRef.current?.abort(); };
-  }, [refreshModels]);
+  }, []);
 
-  // The initial load already fetches models; this only reacts to a later change
-  // of endpoint made in Settings, where the cached list no longer applies.
+  // Fetching the list is derived from the saved connection, so it runs whenever
+  // the endpoint or key changes rather than being triggered by hand at each
+  // call site. It waits for the stored settings, and the stored model is
+  // deliberately left in place: whether it exists on the new endpoint is the
+  // probe's answer, not a side effect of switching URLs.
   useEffect(() => {
-    if (!loadedRef.current) {
-      loadedRef.current = true;
-      return;
-    }
+    if (!loaded) return;
     setModels([]);
-    setSettings((current) => (current.selectedModel ? { ...current, selectedModel: null } : current));
     void refreshModels({ baseUrl: settings.baseUrl, apiKey: settings.apiKey });
-  }, [settings.baseUrl, refreshModels]);
+  }, [loaded, settings.baseUrl, settings.apiKey, refreshModels]);
 
   useEffect(() => {
     applyTheme(settings.theme);
@@ -116,7 +143,7 @@ export default function App() {
 
   useEffect(() => {
     const listener = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
-      if (areaName !== 'session' || !changes['sayelse.selection.v1']?.newValue) return;
+      if (areaName !== 'session' || !changes[HANDOFF_STORAGE_KEY]?.newValue) return;
       void consumeSelectionHandoff(getSessionArea()).then((nextHandoff) => {
         if (nextHandoff) {
           setHandoff(nextHandoff);
@@ -136,10 +163,11 @@ export default function App() {
   }, []);
 
   const updateSettings = useCallback((next: Settings) => {
-    settingsRef.current = next;
-    setSettings(next);
-    void saveSettings(next);
-  }, []);
+    commitSettings(next);
+    // Fire-and-forget is fine for a preference, but not silently: a rejected
+    // write would otherwise disappear with nothing on screen.
+    void saveSettings(next).catch(() => undefined);
+  }, [commitSettings]);
 
   const saveConnection = useCallback(async (draft: { baseUrl: string; apiKey: string }): Promise<string | null> => {
     const normalised = normaliseBaseUrl(draft.baseUrl);
@@ -151,24 +179,28 @@ export default function App() {
       return grant.message;
     }
     const next: Settings = { ...settingsRef.current, baseUrl: normalised.value, apiKey: draft.apiKey };
-    settingsRef.current = next;
-    setSettings(next);
-    await saveSettings(next);
-    void refreshModels({ baseUrl: normalised.value, apiKey: next.apiKey });
+    try {
+      await saveSettings(next);
+    } catch {
+      return 'The connection could not be saved.';
+    }
+    // Commit only after the write lands, so a failed save cannot leave the
+    // screen showing a connection that is not on disk. The model list follows
+    // from this change through the endpoint effect.
+    commitSettings(next);
     return null;
-  }, [refreshModels]);
+  }, [commitSettings]);
 
   const saveModel = useCallback(async (model: string): Promise<string | null> => {
     const next: Settings = { ...settingsRef.current, selectedModel: model };
-    settingsRef.current = next;
-    setSettings(next);
     try {
       await saveSettings(next);
     } catch {
       return 'The model could not be saved.';
     }
+    commitSettings(next);
     return null;
-  }, []);
+  }, [commitSettings]);
 
   // The advertised model list is not authoritative, so existence is settled by
   // calling the model. The endpoint is passed in rather than read from storage

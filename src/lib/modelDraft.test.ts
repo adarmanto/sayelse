@@ -9,10 +9,15 @@ describe('toModelChoice', () => {
     expect(toModelChoice('vendor/x', ['opus', 'sonnet'])).toBe(CUSTOM_MODEL_VALUE);
   });
 
-  it('leaves the stored value alone when no list has been discovered', () => {
-    // An empty list means "not known yet", not "not a real model"; treating it
-    // as the latter would reset a just-saved selection.
-    expect(toModelChoice('sonnet', [])).toBe('sonnet');
+  it('shows a stored model through the custom option when no list was discovered', () => {
+    // An empty list says nothing about which models exist, so the stored model
+    // is kept and routed through the custom option. Returning the raw id here
+    // would leave the select pointing at a value it has no option for, and the
+    // model would vanish from the panel while the endpoint is unreachable.
+    expect(toModelChoice('sonnet', [])).toBe(CUSTOM_MODEL_VALUE);
+  });
+
+  it('leaves an unset model unset even when the list is empty', () => {
     expect(toModelChoice('', [])).toBe('');
   });
 });

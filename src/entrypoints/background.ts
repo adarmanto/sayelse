@@ -1,4 +1,4 @@
-import { MAX_SOURCE_CHARS } from '../lib/constants';
+import { HANDOFF_STORAGE_KEY, MAX_SOURCE_CHARS } from '../lib/constants';
 import { captureSelectionInPage, parseCaptureResult, replaceSelectionInPage } from '../lib/browser/injection';
 import { saveSelectionHandoff } from '../lib/storage/handoff';
 import { getLocalArea, getSessionArea, getSettings } from '../lib/storage/settings';
@@ -130,7 +130,7 @@ export default defineBackground(() => {
   browser.action.onClicked.addListener((tab) => {
     const tabId = tab?.id;
     if (tabId !== undefined) {
-      void browser.storage.session.remove('sayelse.selection.v1');
+      void browser.storage.session.remove(HANDOFF_STORAGE_KEY);
       void browser.sidePanel.open({ tabId });
     }
   });

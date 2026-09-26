@@ -9,14 +9,15 @@ export type ModelDraftResolution =
   | { ok: false; message: string };
 
 /**
- * Picks the select value that represents a stored model. A model absent from a
- * non-empty list is shown through the custom option, because the select cannot
- * otherwise display it — not because the list disproves it. An empty list means
- * nothing has been discovered yet, which is not evidence that the model is
- * unknown.
+ * Picks the select value that represents a stored model. A model absent from
+ * the list is shown through the custom option, because the select cannot
+ * otherwise display it — not because the list disproves it. An empty list
+ * carries no information about which models exist, so a stored model is shown
+ * the same way rather than dropped from the panel while the endpoint is
+ * unreachable.
  */
 export function toModelChoice(stored: string, models: string[]): string {
-  if (!stored || models.length === 0 || models.includes(stored)) {
+  if (!stored || models.includes(stored)) {
     return stored;
   }
   return CUSTOM_MODEL_VALUE;

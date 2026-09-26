@@ -43,7 +43,19 @@ export function SettingsView({ settings, models, modelsLoading, onSettingsChange
   const ownSaveRef = useRef<string | null>(null);
   useEffect(() => {
     const next = settings.selectedModel ?? '';
-    if (next === knownModelRef.current) return;
+    if (next === knownModelRef.current) {
+      // The stored model is unchanged, but the list may have been. The same
+      // id can belong in the list, which moves it out of the custom option,
+      // so the choice is re-derived without touching the confirmation.
+      setModelChoice((current) => {
+        const derived = toModelChoice(next, models);
+        return current === derived ? current : derived;
+      });
+      if (next) {
+        setCustomModel((current) => (current === next ? current : next));
+      }
+      return;
+    }
     knownModelRef.current = next;
     if (ownSaveRef.current === next) {
       ownSaveRef.current = null;

@@ -64,4 +64,15 @@ describe('buildAlternativeMessages', () => {
     expect(system).toContain('Never use semicolons');
     expect(system).toContain('exactly two distinct alternatives');
   });
+
+  it('drops the single-rewrite instruction instead of carrying both', () => {
+    // These two used to be spliced together by matching one literal sentence,
+    // which silently no-ops the moment that sentence is reworded.
+    const single = buildRewriteMessages(baseRequest)[0]?.content ?? '';
+    const alternative = buildAlternativeMessages(baseRequest)[0]?.content ?? '';
+
+    expect(single).toContain('Return only the rewritten text');
+    expect(alternative).not.toContain('Return only the rewritten text');
+    expect(alternative).toContain('Return exactly two distinct alternatives');
+  });
 });
