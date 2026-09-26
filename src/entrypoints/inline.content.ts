@@ -182,8 +182,6 @@ function renderMenu(position: InlinePosition, capture: SelectionCapture | null):
     button.addEventListener('click', () => {
       void runInlineRewrite(position, capture, {
         operation: action.operation,
-        tone: action.tone,
-        length: action.length,
       });
     });
     header.append(button);
@@ -195,7 +193,7 @@ function renderMenu(position: InlinePosition, capture: SelectionCapture | null):
 async function runInlineRewrite(
   position: InlinePosition,
   capture: SelectionCapture | null,
-  preset: Pick<RunInlineRewriteMessage, 'operation' | 'tone' | 'length'>,
+  preset: Pick<RunInlineRewriteMessage, 'operation'>,
 ): Promise<void> {
   const requestId = crypto.randomUUID();
   if (activeRequestId) {
@@ -225,8 +223,6 @@ async function runInlineRewrite(
       if (action.operation === preset.operation || !activePosition) return;
       void runInlineRewrite(activePosition, activeCapture, {
         operation: action.operation,
-        tone: action.tone,
-        length: action.length,
       });
     });
     actionTabs.append(tab);

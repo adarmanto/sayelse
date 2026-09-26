@@ -1,5 +1,5 @@
 import { browser } from 'wxt/browser';
-import { SETTINGS_STORAGE_KEY } from '../constants';
+import { LEGACY_HISTORY_KEY_PREFIX, SETTINGS_STORAGE_KEY } from '../constants';
 import { getDefaultSettings, migrateSettings, settingsSchema, type Settings } from './schema';
 
 export interface StorageAreaLike {
@@ -17,7 +17,16 @@ export function getSessionArea(): StorageAreaLike {
   return browser.storage.session as unknown as StorageAreaLike;
 }
 
+async function purgeLegacyHistory(area: StorageAreaLike): Promise<void> {
+  const values = await area.get(null);
+  const stale = Object.keys(values).filter((key) => key.startsWith(LEGACY_HISTORY_KEY_PREFIX));
+  if (stale.length > 0) {
+    await area.remove(stale);
+  }
+}
+
 export async function getSettings(area: StorageAreaLike = getLocalArea()): Promise<Settings> {
+  await purgeLegacyHistory(area);
   const values = await area.get(SETTINGS_STORAGE_KEY);
   const raw = values[SETTINGS_STORAGE_KEY];
   if (settingsSchema.safeParse(raw).success) {

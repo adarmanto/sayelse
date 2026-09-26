@@ -1,21 +1,8 @@
-import {
-  LENGTHS,
-  MAX_SOURCE_CHARS,
-  OPERATIONS,
-  STRENGTHS,
-  TONES,
-  type Length,
-  type Operation,
-  type Strength,
-  type Tone,
-} from './constants';
+import { MAX_SOURCE_CHARS, OPERATIONS, type Operation } from './constants';
 
 export interface RewriteRequest {
   source: string;
   operation: Operation;
-  tone: Tone;
-  strength: Strength;
-  length: Length;
 }
 
 export interface ChatMessage {
@@ -37,42 +24,20 @@ const writingStyleRules = [
   'Use plain, direct sentences that read like a careful human wrote them.',
 ].join(' ');
 
-const operationInstructions: Record<Operation, string> = {
-  paraphrase: 'Rewrite with fresh wording and sentence structure so the meaning stays the same. Every sentence must differ in wording from the source.',
-  formal: 'Use formal, professional wording. Replace casual words, contractions, slang, and informal phrasing with professional equivalents.',
-  casual: 'Use natural, relaxed, and conversational wording. Replace stiff or overly formal phrasing with everyday language.',
-  concise: 'Cut repetition, filler, and unnecessary words. Keep every important idea and make each sentence tighter.',
-  expand: 'Add useful explanatory detail that is already implied by the source, without inventing facts.',
-  grammar: 'Correct grammar, spelling, punctuation, and obvious word-choice errors while preserving the voice.',
-  originality: 'Rewrite the text in a substantially fresh way. Add a short note that this is not a plagiarism detector.',
-};
-
-const strengthInstructions: Record<Strength, string> = {
-  light: 'Make a restrained edit and avoid unnecessary stylistic changes.',
-  balanced: 'Make meaningful changes while keeping the author recognizable.',
-  strong: 'Transform the wording and structure more decisively while preserving factual meaning.',
-};
-
-const lengthInstructions: Record<Length, string> = {
-  shorter: 'Make the result noticeably shorter.',
-  similar: 'Keep the result close to the source length.',
-  longer: 'Make the result somewhat longer when the source supports useful elaboration.',
-};
-
-const toneInstructions: Record<Tone, string> = {
-  neutral: 'Use a clear, neutral voice.',
-  friendly: 'Use a warm, friendly voice.',
-  professional: 'Use a polished professional voice.',
-  confident: 'Use a confident, direct voice without exaggeration.',
-  persuasive: 'Use a persuasive voice while keeping claims grounded in the source.',
+/**
+ * Each preset folds the whole recipe into one instruction, so the user picks a
+ * single action instead of four separate controls. Tone, intensity, and length
+ * are fixed per preset and no longer configurable on their own.
+ */
+const presetInstructions: Record<Operation, string> = {
+  paraphrase: 'Rewrite with fresh wording and sentence structure so the meaning stays the same. Use a clear, neutral voice and make meaningful changes while keeping the author recognizable. Every sentence must differ in wording from the source, and the result should be close to the source length.',
+  formal: 'Rewrite in a polished professional voice, replacing casual words, contractions, slang, and informal phrasing with professional equivalents. Make meaningful changes while keeping the author recognizable, and keep the result close to the source length.',
+  concise: 'Cut repetition, filler, and unnecessary words. Keep every important idea and make the result noticeably shorter, using a clear, neutral voice and a restrained edit that avoids unnecessary stylistic changes.',
 };
 
 export function buildRewriteMessages(request: RewriteRequest): ChatMessage[] {
   if (!OPERATIONS.includes(request.operation)) {
     throw new Error('Unsupported rewrite operation');
-  }
-  if (!TONES.includes(request.tone) || !STRENGTHS.includes(request.strength) || !LENGTHS.includes(request.length)) {
-    throw new Error('Unsupported rewrite option');
   }
   if (!request.source.trim()) {
     throw new Error('Source text is required');
@@ -91,10 +56,7 @@ export function buildRewriteMessages(request: RewriteRequest): ChatMessage[] {
   ].join(' ');
 
   const user = [
-    `Task: ${operationInstructions[request.operation]}`,
-    `Tone: ${toneInstructions[request.tone]}`,
-    `Intensity: ${strengthInstructions[request.strength]}`,
-    `Length: ${lengthInstructions[request.length]}`,
+    `Task: ${presetInstructions[request.operation]}`,
     'Rewrite the following source between <source_text> and </source_text>:',
     '<source_text>',
     request.source,

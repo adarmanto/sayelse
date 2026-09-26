@@ -10,7 +10,7 @@ When you select editable text and invoke SayElse, the extension processes:
 
 - the text you selected;
 - the location and range of the selected element, which is needed to offer actions and to replace the selection safely;
-- the rewrite settings you chose, such as operation, tone, intensity, and length;
+- the rewrite style you chose;
 - the model you selected;
 - the endpoint URL and API key you entered, if your server requires a key.
 
@@ -21,15 +21,16 @@ Selected text is sent to the endpoint URL you configured when you start a rewrit
 Chrome local extension storage holds:
 
 - your endpoint URL and API key, if you entered a key;
-- the selected model and your default rewrite settings;
-- your theme preference;
-- your rewrite history, bounded to at most 25 entries and roughly 120 KB total.
+- the selected model and your default rewrite style;
+- your theme preference.
+
+SayElse does not keep a history of your rewrites. Nothing you rewrite is written to storage; a result exists only in the panel until you close or reload it.
 
 Selection handoff data is used only by the explicit context menu and side panel flows, and it is deleted once the side panel consumes it. Inline selections are captured only for the rewrite in progress and for the guarded replacement that follows.
 
-Password fields are excluded. Inline rewrite results are not added to history; only successful side panel generations are saved.
+Password fields are excluded.
 
-The API key is never included in history or in generation diagnostics. Chrome extension storage is persistent browser-profile storage, not an encrypted credential vault, so treat it as you would any other file in your profile. If you point SayElse at a hosted provider, that key may grant access to a paid account.
+The API key is never included in generation diagnostics. Chrome extension storage is persistent browser-profile storage, not an encrypted credential vault, so treat it as you would any other file in your profile. If you point SayElse at a hosted provider, that key may grant access to a paid account.
 
 ## What runs on web pages
 
@@ -41,12 +42,7 @@ Your original page text is never modified until you choose one of the alternativ
 
 ## Your controls
 
-Settings lets you:
-
-- delete individual history entries;
-- clear all history;
-- clear the stored API key;
-- clear all SayElse settings and history.
+Settings lets you change or clear your endpoint URL and API key at any time. A rewrite result is discarded when you close or reload the panel; there is nothing to delete.
 
 Removing the extension also removes its extension storage from the Chrome profile. Host access granted for an endpoint can be revoked from `chrome://extensions` → SayElse → Details → Site access.
 

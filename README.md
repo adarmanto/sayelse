@@ -8,21 +8,17 @@ Two surfaces share one rewrite engine.
 
 **Inline.** Select text in an input, textarea, or contenteditable region and a small action bar appears next to it: Paraphrase, Formal, or Shorter. Each action sends one request that returns two alternatives, Closest and Distinct, in a popup beneath the bar. The page text stays untouched until you click one. After that the extension replaces the original only if the selection still matches what it captured.
 
-**Side panel.** The toolbar button and the context menu item open the full panel, where you can paste a draft and use the complete set of controls.
+**Side panel.** The toolbar button and the context menu item open the full panel, where you can paste a draft and pick a rewrite style.
 
-Both surfaces cover the same operations:
+Both surfaces offer the same three styles:
 
-| Operation | Effect |
+| Style | Effect |
 | --- | --- |
 | Paraphrase | Fresh wording, same meaning |
-| More formal | Replaces casual wording and contractions |
-| More casual | Loosens stiff phrasing |
-| Make concise | Cuts repetition and filler |
-| Add detail | Expands on what the source already implies |
-| Fix grammar | Corrects grammar, spelling, and punctuation |
-| Originality check | Substantial rewrite, not a plagiarism detector |
+| Formal | Replaces casual wording and contractions with professional equivalents |
+| Shorter | Cuts repetition and filler and tightens each sentence |
 
-Alongside the operation you can set a tone (neutral, friendly, professional, confident, persuasive), an intensity (light, balanced, strong), and a length (shorter, similar, longer).
+Each style fixes the voice, the strength of the edit, and the target length, so you pick one action instead of tuning several settings.
 
 ## Requirements
 
@@ -85,7 +81,7 @@ src/
   lib/
     api/                 OpenAI-compatible client, SSE parsing, endpoint helpers
     browser/             selection capture, replacement, inline layout, host permissions
-    storage/             settings, history, selection handoff
+    storage/             settings, selection handoff
     prompts.ts           prompt construction and validation
     constants.ts         shared limits and option lists
 ```

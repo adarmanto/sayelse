@@ -48,9 +48,6 @@ async function runInlineRewrite(
       request: {
         source: request.source,
         operation: request.operation,
-        tone: request.tone,
-        strength: settings.defaults.strength,
-        length: request.length,
       },
       generate: (messages) => streamChat({
         baseUrl: settings.baseUrl,

@@ -13,10 +13,7 @@ export function Composer({ value, onChange, disabled = false, sourceKind, onClea
   return (
     <section className="composer" aria-labelledby="source-heading">
       <div className="section-heading">
-        <div>
-          <p className="eyebrow">{isSelection ? 'From this page' : 'Your draft'}</p>
-          <h2 id="source-heading">{isSelection ? 'Selected text' : 'Text to rewrite'}</h2>
-        </div>
+        <h2 id="source-heading">{isSelection ? 'Selected text' : 'Text to rewrite'}</h2>
         <button className="text-button" type="button" onClick={onClear} disabled={!value || disabled}>
           Clear
         </button>
@@ -26,14 +23,14 @@ export function Composer({ value, onChange, disabled = false, sourceKind, onClea
         id="sayelse-source"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Paste a paragraph or start writing here"
+        placeholder="Paste or select text"
         maxLength={MAX_SOURCE_CHARS}
         disabled={disabled}
-        rows={8}
+        rows={7}
         spellCheck="true"
       />
       <div className="field-meta">
-        <span>{value.trim() ? 'Ready to rewrite' : 'Nothing selected yet'}</span>
+        <span>{value.trim() ? 'Ready' : 'Nothing yet'}</span>
         <span className={value.length > MAX_SOURCE_CHARS * 0.9 ? 'count-warning' : ''}>{value.length.toLocaleString()} / {MAX_SOURCE_CHARS.toLocaleString()}</span>
       </div>
     </section>

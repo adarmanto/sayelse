@@ -51,7 +51,18 @@ describe('calculateInlinePopupLayout', () => {
 
   it('never exceeds the available viewport width', () => {
     const layout = calculateInlinePopupLayout({ top: 100, bottom: 130, left: 0 }, 320, 700);
-    expect(layout.width).toBe(304);
+    expect(layout.width).toBe(284);
     expect(layout.left).toBe(8);
+  });
+
+  it('shrinks below the default when the viewport cannot fit it', () => {
+    const layout = calculateInlinePopupLayout({ top: 100, bottom: 130, left: 0 }, 200, 700);
+    expect(layout.width).toBe(184);
+    expect(layout.left).toBe(8);
+  });
+
+  it('defaults to a narrower popup on a wide viewport', () => {
+    const layout = calculateInlinePopupLayout({ top: 100, bottom: 130, left: 200 }, 1440, 900);
+    expect(layout.width).toBe(284);
   });
 });

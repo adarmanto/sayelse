@@ -1,6 +1,5 @@
 import { ApiError, rewriteText, type ApiErrorCode, type EndpointConfig } from './api/openaiCompatible';
 import type { RewriteRequest } from './prompts';
-import type { Length, Operation, Strength, Tone } from './constants';
 
 export type GenerationStatus = 'idle' | 'loading' | 'success' | 'error' | 'stopped';
 
@@ -19,9 +18,6 @@ export async function generateRewrite(input: GenerateInput): Promise<string> {
   return rewriteText({
     source: input.source,
     operation: input.operation,
-    tone: input.tone,
-    strength: input.strength,
-    length: input.length,
     baseUrl: input.baseUrl,
     apiKey: input.apiKey,
     model: input.model,

@@ -21,31 +21,27 @@ export function OutputPanel({ result, status, error, canReplace, copied, onGener
   return (
     <section className="output-panel" aria-labelledby="result-heading">
       <div className="section-heading compact">
-        <div>
-          <p className="eyebrow">Second pass</p>
-          <h2 id="result-heading">Your rewrite</h2>
-        </div>
-        {hasResult && <span className="result-status">Ready to use</span>}
+        <h2 id="result-heading">Your rewrite</h2>
+        {hasResult && <span className="result-status">Ready</span>}
       </div>
 
       {!hasSource && !loading && (
         <div className="result-empty">
-          <div className="empty-mark"><Icon name="spark" size={22} /></div>
+          <div className="empty-mark"><Icon name="spark" size={20} /></div>
           <h3>Start with a sentence</h3>
-          <p>Select text on a page or paste a draft above. SayElse will keep the meaning and change the expression.</p>
+          <p>Select text on a page or paste a draft.</p>
           <button className="primary-button" type="button" onClick={onGenerate} disabled>
-            <Icon name="spark" size={16} /> Rewrite when you are ready
+            <Icon name="spark" size={15} /> Rewrite
           </button>
         </div>
       )}
 
       {hasSource && !hasResult && !loading && !error && (
         <div className="result-empty">
-          <div className="empty-mark"><Icon name="arrow" size={22} /></div>
-          <h3>Your next version starts here</h3>
-          <p>Choose a recipe, then let your model do the first pass.</p>
+          <div className="empty-mark"><Icon name="arrow" size={20} /></div>
+          <h3>Ready when you are</h3>
           <button className="primary-button" type="button" onClick={onGenerate}>
-            <Icon name="spark" size={16} /> Rewrite text
+            <Icon name="spark" size={15} /> Rewrite
           </button>
         </div>
       )}
@@ -61,16 +57,16 @@ export function OutputPanel({ result, status, error, canReplace, copied, onGener
       {status === 'error' && error && (
         <div className="result-error" role="alert">
           <div className="feedback-icon"><Icon name="alert" size={18} /></div>
-          <div><h3>We could not finish that rewrite</h3><p>{error.message}</p></div>
-          <button className="secondary-button" type="button" onClick={onRetry}><Icon name="retry" size={15} /> Try again</button>
+          <div><h3>Could not finish</h3><p>{error.message}</p></div>
+          <button className="secondary-button" type="button" onClick={onRetry}><Icon name="retry" size={14} /> Retry</button>
         </div>
       )}
 
       {status === 'stopped' && (
         <div className="result-error neutral" role="status">
           <div className="feedback-icon"><Icon name="stop" size={18} /></div>
-          <div><h3>Rewrite stopped</h3><p>Your partial result is still here if you want to keep it.</p></div>
-          <button className="secondary-button" type="button" onClick={onRetry}><Icon name="retry" size={15} /> Resume</button>
+          <div><h3>Stopped</h3><p>Your partial result is still here.</p></div>
+          <button className="secondary-button" type="button" onClick={onRetry}><Icon name="retry" size={14} /> Resume</button>
         </div>
       )}
 
@@ -78,8 +74,8 @@ export function OutputPanel({ result, status, error, canReplace, copied, onGener
         <div className="result-content">
           <p className="result-text">{result}</p>
           <div className="result-actions">
-            <button className="secondary-button" type="button" onClick={onCopy}><Icon name={copied ? 'check' : 'copy'} size={15} /> {copied ? 'Copied' : 'Copy result'}</button>
-            {canReplace && <button className="secondary-button" type="button" onClick={onReplace}><Icon name="replace" size={15} /> Replace selection</button>}
+            <button className="secondary-button" type="button" onClick={onCopy}><Icon name={copied ? 'check' : 'copy'} size={14} /> {copied ? 'Copied' : 'Copy'}</button>
+            {canReplace && <button className="secondary-button" type="button" onClick={onReplace}><Icon name="replace" size={14} /> Replace</button>}
           </div>
         </div>
       )}

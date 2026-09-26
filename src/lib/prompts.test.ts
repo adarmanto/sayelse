@@ -1,11 +1,9 @@
 import { buildAlternativeMessages, buildRewriteMessages } from './prompts';
+import { OPERATIONS } from './constants';
 
 const baseRequest = {
   source: 'A short note about the launch.',
   operation: 'formal' as const,
-  tone: 'professional' as const,
-  strength: 'balanced' as const,
-  length: 'similar' as const,
 };
 
 describe('buildRewriteMessages', () => {
@@ -29,6 +27,23 @@ describe('buildRewriteMessages', () => {
     expect(system).toContain('Never use semicolons');
     expect(system).toContain('Avoid AI-sounding writing');
     expect(system).toContain('Fix grammar, spelling, punctuation, and word choice');
+  });
+
+  it('gives every preset its own instruction', () => {
+    const tasks = OPERATIONS.map(
+      (operation) => buildRewriteMessages({ ...baseRequest, operation })[1]?.content ?? '',
+    );
+
+    expect(new Set(tasks).size).toBe(OPERATIONS.length);
+  });
+
+  it('folds tone, intensity, and length into the preset rather than separate lines', () => {
+    const user = buildRewriteMessages(baseRequest)[1]?.content ?? '';
+
+    expect(user).toContain('Task:');
+    expect(user).not.toContain('Tone:');
+    expect(user).not.toContain('Intensity:');
+    expect(user).not.toContain('Length:');
   });
 });
 

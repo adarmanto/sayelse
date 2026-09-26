@@ -54,12 +54,12 @@ export function inlineThemeStylesheet(): string {
   return `
     :host { all: initial; color-scheme: var(--sayelse-scheme); }
     * { box-sizing: border-box; }
-    .menu, .result { width: 100%; border: 1px solid var(--sayelse-line); border-radius: 12px; background: var(--sayelse-surface); box-shadow: var(--sayelse-shadow); color: var(--sayelse-text); font: 500 12px/1.2 system-ui, sans-serif; }
+    .menu, .result { width: 100%; border: 1px solid var(--sayelse-line); border-radius: 10px; background: var(--sayelse-surface); box-shadow: var(--sayelse-shadow); color: var(--sayelse-text); font: 500 12px/1.2 system-ui, sans-serif; }
     .menu { display: block; width: max-content; max-width: 100%; }
-    .inline-header { display: flex; align-items: stretch; gap: 2px; width: max-content; max-width: 100%; min-height: 42px; padding: 4px; }
-    .brand { display: flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 8px 0 6px; border-right: 1px solid var(--sayelse-line); color: var(--sayelse-brand); font-weight: 700; white-space: nowrap; }
-    .mark { font-size: 15px; }
-    button { appearance: none; min-height: 34px; padding: 0 10px; border: 1px solid transparent; border-radius: 8px; color: var(--sayelse-text-soft); background: transparent; cursor: pointer; font: inherit; font-weight: 600; white-space: nowrap; transition: border-color 140ms ease, background 140ms ease, color 140ms ease; }
+    .inline-header { display: flex; align-items: stretch; gap: 2px; width: max-content; max-width: 100%; min-height: 34px; padding: 3px; }
+    .brand { display: flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 6px 0 5px; border-right: 1px solid var(--sayelse-line); color: var(--sayelse-brand); font-weight: 700; white-space: nowrap; }
+    .mark { font-size: 13px; }
+    button { appearance: none; min-height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: 7px; color: var(--sayelse-text-soft); background: transparent; cursor: pointer; font: inherit; font-weight: 600; white-space: nowrap; transition: border-color 140ms ease, background 140ms ease, color 140ms ease; }
     button:hover { border-color: var(--sayelse-focus); color: var(--sayelse-text); background: var(--sayelse-wash); }
     button:focus-visible { border-color: var(--sayelse-focus); color: var(--sayelse-text); background: var(--sayelse-wash); outline: 1px solid var(--sayelse-focus); outline-offset: 2px; }
     .result { max-height: var(--sayelse-max-height); overflow: clip; padding: 0; }
@@ -69,28 +69,28 @@ export function inlineThemeStylesheet(): string {
     .result-header .brand { flex: 0 0 auto; }
     .result-header .action-tabs { position: static; flex: 1 1 auto; min-width: 0; width: auto; max-width: 100%; background: transparent; }
     .action-tabs { display: flex; width: max-content; max-width: 100%; gap: 2px; overflow-x: auto; scrollbar-width: none; }
-    .action-button { min-height: 34px; padding: 0 10px; border: 1px solid transparent; border-radius: 8px; color: var(--sayelse-text-muted); background: transparent; }
+    .action-button { min-height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: 7px; color: var(--sayelse-text-muted); background: transparent; }
     .action-button:hover, .action-button:focus-visible { border-color: var(--sayelse-focus); color: var(--sayelse-text); background: var(--sayelse-wash); }
     .action-button[aria-selected="true"] { color: var(--sayelse-ink); border-color: var(--sayelse-accent); background: var(--sayelse-accent); }
     .action-button[aria-selected="true"]:hover, .action-button[aria-selected="true"]:focus-visible { border-color: var(--sayelse-selected-ring); background: var(--sayelse-accent-strong); }
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sayelse-accent); animation: pulse 1.1s ease-in-out infinite; }
-    .text { margin: 0 10px 10px; color: var(--sayelse-text); font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .alternatives { display: grid; grid-template-columns: 1fr; gap: 6px; padding: 0 10px 10px; }
-    .alternative { display: grid; gap: 4px; width: 100%; min-width: 0; min-height: 62px; padding: 9px; border: 1px solid var(--sayelse-line); border-radius: 9px; text-align: left; white-space: normal; }
+    .text { margin: 0 8px 8px; color: var(--sayelse-text); font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .alternatives { display: grid; grid-template-columns: 1fr; gap: 5px; padding: 0 8px 8px; }
+    .alternative { display: grid; gap: 3px; width: 100%; min-width: 0; min-height: 48px; padding: 7px; border: 1px solid var(--sayelse-line); border-radius: 8px; text-align: left; white-space: normal; }
     .alternative:hover { border-color: var(--sayelse-focus); background: var(--sayelse-wash); }
     .alternative:focus-visible { border-color: var(--sayelse-focus); background: var(--sayelse-wash); outline: 1px solid var(--sayelse-focus); outline-offset: 2px; }
-    .alternative-text { color: var(--sayelse-text); font-size: 12px; font-weight: 500; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .loading { display: grid; gap: 4px; padding: 9px; border: 1px solid var(--sayelse-line); border-radius: 9px; }
+    .alternative-text { color: var(--sayelse-text); font-size: 11.5px; font-weight: 500; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .loading { display: grid; gap: 3px; padding: 7px; border: 1px solid var(--sayelse-line); border-radius: 8px; }
     .loading .alternative-text { color: var(--sayelse-text-muted); font-style: italic; }
     .pending { color: var(--sayelse-text-muted); font-style: italic; }
     .error { color: var(--sayelse-danger); }
-    .actions { display: flex; gap: 5px; margin: 0 10px 10px; }
+    .actions { display: flex; gap: 4px; margin: 0 8px 8px; }
     .actions button { border-color: var(--sayelse-line); }
     @keyframes pulse { 0%,100% { opacity:.45; transform:scale(.85) } 50% { opacity:1; transform:scale(1.15) } }
     @media (max-width: 680px) {
       .alternatives { grid-template-columns: 1fr; }
-      .brand { padding-right: 5px; }
-      .action-button { padding: 0 7px; font-size: 11px; }
+      .brand { padding-right: 4px; }
+      .action-button { padding: 0 6px; font-size: 10.5px; }
       .result-header { overflow: hidden; }
       .action-tabs { gap: 2px; }
     }

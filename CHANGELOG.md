@@ -14,13 +14,17 @@ The project is pre-1.0, so anything may change before the first stable release.
 
 ### Changed
 
-- Settings renamed the API token to API key and gained an endpoint URL, stored under a v2 schema.
+- Settings renamed the API token to API key and gained an endpoint URL.
 - Error messages now name the configured host instead of a fixed product.
 - Loopback addresses remain pre-granted, so the original local setup still works with no permission prompt.
+- The side panel rewrite controls are now three preset buttons, Paraphrase, Formal, and Shorter, matching the inline action bar. Each preset fixes the voice, edit strength, and target length that were previously four separate controls.
+- The remaining operations, More casual, Add detail, Fix grammar, and Originality check, have been removed, along with the standalone tone, intensity, and length controls.
+- Settings are now stored under a v3 schema that carries only the preset.
 
 ### Migration
 
 - Existing settings are upgraded in place on first read. The stored API key, selected model, recipe, and theme carry over; the endpoint defaults to `http://127.0.0.1:20128/v1`.
+- A v1 or v2 recipe is upgraded to the v3 preset shape. A stored operation that is no longer offered, such as casual or expand, falls back to Paraphrase rather than failing the load, so the API key and model are never lost.
 
 ## [0.1.0] - 2026-09-25
 

@@ -20,7 +20,7 @@ export function calculateInlinePopupLayout(
   rect: InlinePopupRect,
   viewportWidth: number,
   viewportHeight: number,
-  preferredWidth = 356,
+  preferredWidth = 284,
   margin = 8,
   maxPreferredHeight = Number.POSITIVE_INFINITY,
   contentHeight = 1,

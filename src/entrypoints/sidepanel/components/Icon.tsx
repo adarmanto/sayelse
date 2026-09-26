@@ -3,19 +3,14 @@ import type { ReactNode } from 'react';
 export type IconName =
   | 'spark'
   | 'write'
-  | 'history'
   | 'settings'
   | 'connection'
-  | 'recipe'
   | 'appearance'
-  | 'privacy'
-  | 'data'
   | 'copy'
   | 'replace'
   | 'stop'
   | 'retry'
   | 'refresh'
-  | 'trash'
   | 'arrow'
   | 'check'
   | 'alert';
@@ -39,13 +34,6 @@ const shapes: Record<IconName, ReactNode> = {
       <path d="M15.6 4.8l3.6 3.6" />
     </>
   ),
-  history: (
-    <>
-      <path d="M8.99 3.73A8.8 8.8 0 1 1 4.02 8.28" />
-      <path d="M3.2 3.4v5.2h5.2" />
-      <path d="M12 7.2V12l3.2 1.9" />
-    </>
-  ),
   settings: (
     <>
       <circle cx="12" cy="12" r="4" />
@@ -59,30 +47,7 @@ const shapes: Record<IconName, ReactNode> = {
       <path d="M8.4 12h7.2" />
     </>
   ),
-  recipe: (
-    <>
-      <path d="M4 7.2h16" />
-      <path d="M4 12h16" />
-      <path d="M4 16.8h16" />
-      <circle cx="9" cy="7.2" r="2.1" />
-      <circle cx="15.4" cy="12" r="2.1" />
-      <circle cx="7.6" cy="16.8" r="2.1" />
-    </>
-  ),
   appearance: <path d="M12 3.4a6.4 6.4 0 0 0 8.9 8.9 8.9 8.9 0 1 1-8.9-8.9z" />,
-  privacy: (
-    <>
-      <path d="M12 3.2l7 2.8v5.2c0 4.2-2.9 8-7 9.6-4.1-1.6-7-5.4-7-9.6V6l7-2.8z" />
-      <path d="M9.2 12.1l2 2 3.6-3.7" />
-    </>
-  ),
-  data: (
-    <>
-      <ellipse cx="12" cy="6" rx="7.4" ry="3" />
-      <path d="M4.6 6v12c0 1.7 3.3 3 7.4 3s7.4-1.3 7.4-3V6" />
-      <path d="M4.6 12c0 1.7 3.3 3 7.4 3s7.4-1.3 7.4-3" />
-    </>
-  ),
   copy: (
     <>
       <rect x="9" y="9" width="11.4" height="11.4" rx="2.2" />
@@ -110,15 +75,6 @@ const shapes: Record<IconName, ReactNode> = {
     <>
       <path d="M19.98 8.28A8.8 8.8 0 1 1 15.01 3.73" />
       <path d="M20.6 3.4v5.2h-5.2" />
-    </>
-  ),
-  trash: (
-    <>
-      <path d="M3.8 6.4h16.4" />
-      <path d="M18.6 6.4V19a2 2 0 0 1-2 2H7.4a2 2 0 0 1-2-2V6.4" />
-      <path d="M9.2 6.4V4.6A1.6 1.6 0 0 1 10.8 3h2.4a1.6 1.6 0 0 1 1.6 1.6v1.8" />
-      <path d="M10.2 11v5.6" />
-      <path d="M13.8 11v5.6" />
     </>
   ),
   arrow: (

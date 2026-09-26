@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { MAX_OUTPUT_CHARS, MAX_SOURCE_CHARS } from '../constants';
-import { lengthSchema, operationSchema, selectionCaptureSchema, toneSchema } from '../storage/schema';
+import { operationSchema, selectionCaptureSchema } from '../storage/schema';
 
 export const runInlineRewriteMessageSchema = z.object({
   type: z.literal('run-inline-rewrite'),
@@ -8,8 +8,6 @@ export const runInlineRewriteMessageSchema = z.object({
   source: z.string().min(1).max(MAX_SOURCE_CHARS),
   capture: selectionCaptureSchema.nullable(),
   operation: operationSchema,
-  tone: toneSchema,
-  length: lengthSchema,
 });
 
 export type RunInlineRewriteMessage = z.infer<typeof runInlineRewriteMessageSchema>;
