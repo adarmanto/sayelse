@@ -31,14 +31,14 @@ If private reporting is unavailable, contact the maintainer directly at **agung.
 
 ## Handling secrets
 
-The extension stores a 9Router API token in Chrome's local extension storage. That is persistent browser-profile storage, not an encrypted credential vault. Treat it accordingly:
+The extension stores the API key for your configured endpoint in Chrome's local extension storage. That is persistent browser-profile storage, not an encrypted credential vault. Treat it accordingly:
 
 - Do not commit tokens, keys, or `.env` files. `.gitignore` already covers the usual names.
-- If you ever commit a token by accident, rotate it with 9Router immediately. Removing the commit alone does not help, since the history still contains it.
-- When sharing diagnostics, redact the token and the text you were rewriting.
+- If you ever commit a key by accident, rotate it with the provider immediately. Removing the commit alone does not help, since the history still contains it.
+- When sharing diagnostics, redact the API key and the text you were rewriting.
 
 ## Scope
 
-Reports are in scope for the extension's own code: selection capture and replacement, storage handling, message passing between the content script, service worker, and side panel, the fixed loopback network client, and prompt construction.
+Reports are in scope for the extension's own code: selection capture and replacement, storage handling, message passing between the content script, service worker, and side panel, the network client and the host-permission flow, and prompt construction.
 
-Reports are out of scope for 9Router itself and for any model provider behind it, since those are separate projects. If the vulnerability lives there, please report it there. Likewise, a finding that depends on a page deliberately abusing the extension is usually a design limitation rather than a vulnerability, though we are open to hearing it.
+Reports are out of scope for your configured endpoint and for any model provider behind it, since those are separate projects. If the vulnerability lives there, please report it there. Likewise, a finding that depends on a page deliberately abusing the extension is usually a design limitation rather than a vulnerability, though we are open to hearing it.

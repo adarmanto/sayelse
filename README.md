@@ -1,6 +1,6 @@
 # SayElse
 
-SayElse is a Chrome extension for rewriting text. Select text in a page, pick an action, and get an alternative you can accept or discard. It talks to a 9Router instance running on your own machine, so the model you use stays under your control.
+SayElse is a Chrome extension for rewriting text. Select text in a page, pick an action, and get an alternative you can accept or discard. It talks to any OpenAI-compatible server you choose, so the model you use stays under your control.
 
 ## How it works
 
@@ -29,7 +29,7 @@ Alongside the operation you can set a tone (neutral, friendly, professional, con
 - Chrome 114 or newer
 - Node.js 22 or newer
 - pnpm 10
-- 9Router running locally
+- An OpenAI-compatible server you can reach
 
 ## Setup
 
@@ -40,17 +40,27 @@ pnpm dev
 
 Then open `chrome://extensions`, turn on Developer mode, choose Load unpacked, and select `.output/chrome-mv3`.
 
-## Connecting 9Router
+## Connecting a server
 
-SayElse talks to a fixed endpoint:
+SayElse speaks the standard OpenAI chat-completions API, so any server that implements it will work: a hosted provider, a local router, or a self-hosted model.
+
+Open Settings and enter the **endpoint URL** — the base URL of the server, including its API path:
 
 ```text
+https://api.example.com/v1
 http://127.0.0.1:20128/v1
+http://127.0.0.1:11434/v1
 ```
 
-Start 9Router on port `20128`, open Settings in SayElse, and enter its token if it needs one. SayElse then calls `GET /v1/models` to populate the model list and `POST /v1/chat/completions` for every rewrite, streaming responses as they arrive.
+A pasted link that already ends in `/chat/completions` or `/models` is trimmed down to the base for you. If you leave off the scheme, SayElse assumes `https://`.
 
-A local router is not the same as local inference. 9Router may forward your text to whichever provider is configured inside it, and SayElse has no way to see or control that. Review your router setup before sending anything sensitive.
+Add your **API key** in the same panel if the server needs one. It is sent as an `Authorization: Bearer` header; leave it blank for servers that allow anonymous access.
+
+Press **Save endpoint**. Chrome asks permission to reach that host the first time, and SayElse requests access to that origin only — never a blanket site permission. A loopback address such as `127.0.0.1` or `localhost` is already allowed by default, so no prompt appears.
+
+SayElse then calls `GET {base}/models` to populate the model list and `POST {base}/chat/completions` for every rewrite, streaming responses as they arrive. Changing the endpoint refreshes the model list automatically.
+
+A local server is not the same as local inference. Your server may forward your text to whichever provider it is configured with, and SayElse has no way to see or control that. Review your setup before sending anything sensitive.
 
 ## Commands
 
@@ -73,22 +83,22 @@ src/
     inline.content.ts    inline action bar and popup
     sidepanel/           the full panel UI
   lib/
-    api/                 9Router client, SSE parsing
-    browser/             selection capture, replacement, inline layout
+    api/                 OpenAI-compatible client, SSE parsing, endpoint helpers
+    browser/             selection capture, replacement, inline layout, host permissions
     storage/             settings, history, selection handoff
     prompts.ts           prompt construction and validation
     constants.ts         shared limits and option lists
 ```
 
-Tests sit next to the code they cover, as `*.test.ts` files. The whole suite is 36 tests across 10 files and runs in jsdom.
+Tests sit next to the code they cover, as `*.test.ts` files. The whole suite is 88 tests across 12 files and runs in jsdom.
 
 ## Privacy
 
-SayElse has no account, no analytics, no telemetry, and no remote assets. Everything it stores stays in Chrome's local extension storage, and the only network request it makes goes to the loopback address above. See [PRIVACY.md](PRIVACY.md) for the full picture, including what the stored token is and is not.
+SayElse has no account, no analytics, no telemetry, and no remote assets. Everything it stores stays in Chrome's local extension storage, and the only network requests it makes go to the endpoint you configure. See [PRIVACY.md](PRIVACY.md) for the full picture, including what the stored API key is and is not.
 
 ## Status
 
-The extension is usable as an unpacked build today. Publishing it to the Chrome Web Store still needs a review of the loopback HTTP transport, CORS behaviour, and content script disclosures, plus a hosted version of the privacy policy, since the store requires one on a public URL.
+The extension is usable as an unpacked build today. Publishing it to the Chrome Web Store still needs a review of the user-configurable host permission, the content script disclosures, and the transport to non-loopback endpoints, plus a hosted version of the privacy policy, since the store requires one on a public URL.
 
 ## Contributing
 

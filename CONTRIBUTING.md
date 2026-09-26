@@ -4,7 +4,7 @@ Thanks for taking the time. This document covers how to get set up, what a good 
 
 ## Getting set up
 
-You will need Chrome 114 or newer, Node.js 22 or newer, pnpm 10, and a 9Router instance running locally on port `20128`.
+You will need Chrome 114 or newer, Node.js 22 or newer, pnpm 10, and an OpenAI-compatible server you can reach. A local one is enough.
 
 ```bash
 git clone git@github.com:adarmanto/sayelse.git
@@ -59,10 +59,10 @@ Open an issue and include:
 
 - Chrome version and OS
 - What you did, what you expected, and what happened instead
-- The relevant Settings values, with the 9Router token redacted
+- The relevant Settings values, with the API key redacted
 - Console output from the side panel or `chrome://extensions`
 
-Do not paste your 9Router token, any other API key, or text you were rewriting into an issue. Redact it first.
+Do not paste your API key, any other secret, or text you were rewriting into an issue. Redact it first.
 
 ## Security issues
 

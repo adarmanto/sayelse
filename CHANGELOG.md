@@ -6,7 +6,21 @@ The project is pre-1.0, so anything may change before the first stable release.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- Configurable endpoint URL in Settings. SayElse now works with any OpenAI-compatible server instead of a fixed local router.
+- Host access requested per endpoint through an optional host permission, so the extension can reach a remote server without holding a blanket site permission.
+- `normaliseBaseUrl` accepts a bare host, trims a trailing slash, and reduces a pasted `/chat/completions` or `/models` link to its base.
+
+### Changed
+
+- Settings renamed the API token to API key and gained an endpoint URL, stored under a v2 schema.
+- Error messages now name the configured host instead of a fixed product.
+- Loopback addresses remain pre-granted, so the original local setup still works with no permission prompt.
+
+### Migration
+
+- Existing settings are upgraded in place on first read. The stored API key, selected model, recipe, and theme carry over; the endpoint defaults to `http://127.0.0.1:20128/v1`.
 
 ## [0.1.0] - 2026-09-25
 
