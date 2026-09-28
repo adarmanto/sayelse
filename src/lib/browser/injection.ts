@@ -2,6 +2,31 @@ import { selectionCaptureSchema, type SelectionCapture } from '../storage/schema
 
 type PageCapture = SelectionCapture;
 
+/**
+ * `Selection.toString()` and `Range.toString()` describe the same words but not
+ * the same characters when a selection crosses block boundaries. Measured in
+ * Chrome for a three-paragraph selection, the range rendered each boundary as
+ * the CSS whitespace between the blocks ("\n    ") while the selection used a
+ * line break ("\n\n"). The widths differ per element, so the boundary is
+ * compared as "any whitespace run" rather than a fixed string — while a real
+ * edit to the words must still fail, or a stale capture would overwrite
+ * something the user has since rewritten.
+ *
+ * The global flag is load-bearing: without it `replace` strips only the first
+ * boundary, so a selection of three or more paragraphs still fails the guard.
+ */
+const BLOCK_SEPARATOR = /\s+/g;
+
+export function isSameText(a: string, b: string): boolean {
+  if (a === b) return true;
+  return a.replace(BLOCK_SEPARATOR, '') === b.replace(BLOCK_SEPARATOR, '');
+}
+
+function editableHostOf(node: Node): HTMLElement | null {
+  const element = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
+  return element?.closest('[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]') ?? null;
+}
+
 export function captureSelectionInPage(maxSourceChars: number): PageCapture | null {
   const pathFromDocumentRoot = (node: Node): number[] => {
     const path: number[] = [];
@@ -102,10 +127,18 @@ export function replaceSelectionInPage(capture: PageCapture | null, replacement:
     } catch {
       return false;
     }
-    const startParent: HTMLElement | null = startNode.nodeType === Node.ELEMENT_NODE
-      ? (startNode as HTMLElement)
-      : startNode.parentElement;
-    if (range.toString() !== capture.source || !startParent?.isContentEditable) return false;
+    // The common ancestor, not the start node, so a selection that starts in one
+    // paragraph still resolves the editable host wrapping the whole range.
+    const editableHost = editableHostOf(range.commonAncestorContainer);
+    if (!editableHost) return false;
+    // The host alone does not bound the range: a capture whose nodes were since
+    // re-parented out of it would resolve a host the range no longer sits in.
+    if (!editableHost.contains(range.startContainer) || !editableHost.contains(range.endContainer)) return false;
+    // `capture.source` is `selection.toString()`, which marks a block boundary
+    // with a line break while the range renders it as the whitespace between the
+    // blocks. The words must still match, or a capture the user has since edited
+    // would overwrite their text.
+    if (range.toString() !== capture.source && !isSameText(range.toString(), capture.source)) return false;
     const selection = window.getSelection();
     selection?.removeAllRanges();
     selection?.addRange(range);
@@ -117,7 +150,7 @@ export function replaceSelectionInPage(capture: PageCapture | null, replacement:
     range.collapse(true);
     selection?.removeAllRanges();
     selection?.addRange(range);
-    startParent.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: replacement }));
+    editableHost.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: replacement }));
     return true;
   }
 

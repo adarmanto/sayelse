@@ -164,6 +164,62 @@ function createBrand(): HTMLDivElement {
   return brand;
 }
 
+function createCopyIcon(): SVGElement {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const back = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  back.setAttribute('x', '9');
+  back.setAttribute('y', '9');
+  back.setAttribute('width', '11.4');
+  back.setAttribute('height', '11.4');
+  back.setAttribute('rx', '2.2');
+  const front = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  front.setAttribute('d', 'M15.4 5.6A2.2 2.2 0 0 0 13.2 4H5.8A1.8 1.8 0 0 0 4 5.8v7.4a2.2 2.2 0 0 0 1.6 2.2');
+  svg.append(back, front);
+  return svg;
+}
+
+/**
+ * Falls back to the legacy execCommand path because the async clipboard is
+ * refused outside a user-gesture context in some pages; a rejected write must
+ * still leave the user with the text on the clipboard.
+ */
+async function copyToClipboard(text: string, button: HTMLElement): Promise<void> {
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(text);
+    copied = true;
+  } catch {
+    copied = legacyCopy(text);
+  }
+  if (!copied) return;
+  button.classList.add('copied');
+  button.setAttribute('aria-label', 'Copied');
+  window.setTimeout(() => {
+    button.classList.remove('copied');
+    button.setAttribute('aria-label', 'Copy this version');
+  }, 1200);
+}
+
+function legacyCopy(text: string): boolean {
+  const scratch = document.createElement('textarea');
+  scratch.value = text;
+  scratch.setAttribute('readonly', '');
+  scratch.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+  document.body.append(scratch);
+  scratch.select();
+  let copied = false;
+  try {
+    copied = document.execCommand('copy');
+  } catch {
+    copied = false;
+  }
+  scratch.remove();
+  return copied;
+}
+
 function renderMenu(position: InlinePosition, capture: SelectionCapture | null): void {
   const { popup } = createBaseHost();
   popup.setAttribute('role', 'menu');
@@ -265,34 +321,18 @@ async function runInlineRewrite(
   }
 }
 
-function applyAlternative(alternative: { text: string }): void {
-  if (activeCapture?.replaceable && replaceSelectionInPage(activeCapture, alternative.text)) {
+function applyAlternative(replacement: string): void {
+  if (activeCapture?.replaceable && replaceSelectionInPage(activeCapture, replacement)) {
     window.setTimeout(hideMenu, 450);
     return;
   }
 
-  const popup = host?.shadowRoot?.querySelector('.result');
-  const notice = popup?.querySelector('.text');
-  const actions = popup?.querySelector('.actions');
-  if (notice) {
-    notice.textContent = 'The original selection changed. Copy the chosen version instead.';
-    notice.className = 'text error';
-  }
-  if (actions instanceof HTMLDivElement) return;
-  if (!(popup instanceof HTMLDivElement)) return;
-
-  const fallback = document.createElement('div');
-  fallback.className = 'actions';
-  const copy = document.createElement('button');
-  copy.type = 'button';
-  copy.textContent = 'Copy selected version';
-  copy.addEventListener('click', () => {
-    void navigator.clipboard.writeText(alternative.text).then(() => {
-      copy.textContent = 'Copied';
-    });
-  });
-  fallback.append(copy);
-  popup.append(fallback);
+  // The selection can no longer be written back, so say so and leave the
+  // per-alternative copy button as the way to take the text away.
+  const notice = host?.shadowRoot?.querySelector('.result .text');
+  if (!notice) return;
+  notice.textContent = 'The original selection changed. Copy the chosen version instead.';
+  notice.className = 'text error';
 }
 
 function showResult(progress: InlineRewriteProgressMessage): void {
@@ -317,15 +357,30 @@ function showResult(progress: InlineRewriteProgressMessage): void {
   alternatives.replaceChildren();
   alternatives.setAttribute('aria-label', 'Choose one of two alternatives');
   for (const alternative of progress.alternatives) {
-    const card = document.createElement('button');
-    card.type = 'button';
+    const card = document.createElement('div');
     card.className = 'alternative';
-    card.setAttribute('aria-label', 'Use this version');
+
+    const use = document.createElement('button');
+    use.type = 'button';
+    use.className = 'alternative-use';
+    use.setAttribute('aria-label', 'Use this version');
     const text = document.createElement('span');
     text.className = 'alternative-text';
     text.textContent = alternative.text;
-    card.append(text);
-    card.addEventListener('click', () => applyAlternative(alternative));
+    use.append(text);
+    use.addEventListener('click', () => applyAlternative(alternative.text));
+
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.className = 'alternative-copy';
+    copy.setAttribute('aria-label', 'Copy this version');
+    copy.title = 'Copy';
+    copy.append(createCopyIcon());
+    copy.addEventListener('click', () => {
+      void copyToClipboard(alternative.text, copy);
+    });
+
+    card.append(use, copy);
     alternatives.append(card);
   }
   if (notice) {

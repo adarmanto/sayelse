@@ -76,16 +76,20 @@ export function inlineThemeStylesheet(): string {
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sayelse-accent); animation: pulse 1.1s ease-in-out infinite; }
     .text { margin: 0 8px 8px; color: var(--sayelse-text); font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
     .alternatives { display: grid; grid-template-columns: 1fr; gap: 5px; padding: 0 8px 8px; }
-    .alternative { display: grid; gap: 3px; width: 100%; min-width: 0; min-height: 48px; padding: 7px; border: 1px solid var(--sayelse-line); border-radius: 8px; text-align: left; white-space: normal; }
-    .alternative:hover { border-color: var(--sayelse-focus); background: var(--sayelse-wash); }
-    .alternative:focus-visible { border-color: var(--sayelse-focus); background: var(--sayelse-wash); outline: 1px solid var(--sayelse-focus); outline-offset: 2px; }
+    .alternative { position: relative; border: 1px solid var(--sayelse-line); border-radius: 8px; }
+    .alternative-use { display: grid; gap: 3px; width: 100%; min-width: 0; min-height: 48px; padding: 7px 30px 7px 7px; border: 0; border-radius: 8px; text-align: left; white-space: normal; }
+    .alternative:hover, .alternative:focus-within { border-color: var(--sayelse-focus); background: var(--sayelse-wash); }
+    .alternative-use:focus-visible { outline: 1px solid var(--sayelse-focus); outline-offset: 2px; }
+    .alternative-copy { position: absolute; right: 4px; bottom: 4px; display: flex; align-items: center; justify-content: center; width: 24px; min-height: 24px; padding: 0; border: 1px solid transparent; border-radius: 6px; color: var(--sayelse-text-muted); background: transparent; }
+    .alternative-copy:hover, .alternative-copy:focus-visible { border-color: var(--sayelse-focus); color: var(--sayelse-text); background: var(--sayelse-surface); outline: 1px solid var(--sayelse-focus); outline-offset: 2px; }
+    .alternative-copy.copied { color: var(--sayelse-accent-strong); }
+    .alternative-copy svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .alternative-copy.copied svg { opacity: 0.35; }
     .alternative-text { color: var(--sayelse-text); font-size: 11.5px; font-weight: 500; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
     .loading { display: grid; gap: 3px; padding: 7px; border: 1px solid var(--sayelse-line); border-radius: 8px; }
     .loading .alternative-text { color: var(--sayelse-text-muted); font-style: italic; }
     .pending { color: var(--sayelse-text-muted); font-style: italic; }
     .error { color: var(--sayelse-danger); }
-    .actions { display: flex; gap: 4px; margin: 0 8px 8px; }
-    .actions button { border-color: var(--sayelse-line); }
     @keyframes pulse { 0%,100% { opacity:.45; transform:scale(.85) } 50% { opacity:1; transform:scale(1.15) } }
     @media (max-width: 680px) {
       .alternatives { grid-template-columns: 1fr; }
