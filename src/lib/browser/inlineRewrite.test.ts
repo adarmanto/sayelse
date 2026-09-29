@@ -3,10 +3,7 @@ import type { ChatMessage } from '../prompts';
 
 const request = {
   source: 'A short note about the launch.',
-  operation: 'formal' as const,
-  tone: 'professional' as const,
-  strength: 'balanced' as const,
-  length: 'similar' as const,
+  operation: 'friendly' as const,
 };
 
 describe('generateInlineAlternatives', () => {

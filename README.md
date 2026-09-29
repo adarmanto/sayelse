@@ -6,7 +6,7 @@ SayElse is a Chrome extension for rewriting text. Select text in a page, pick an
 
 Two surfaces share one rewrite engine.
 
-**Inline.** Select text in an input, textarea, or contenteditable region and a small action bar appears next to it: Paraphrase, Formal, or Shorter. Each action sends one request that returns two alternatives, Closest and Distinct, in a popup beneath the bar. The page text stays untouched until you click one. After that the extension replaces the original only if the selection still matches what it captured.
+**Inline.** Select text in an input, textarea, or contenteditable region and a small action bar appears next to it: Paraphrase, Friendly, or Shorter. Each action sends one request that returns two alternatives, Closest and Distinct, in a popup beneath the bar. The page text stays untouched until you click one. After that the extension replaces the original only if the selection still matches what it captured.
 
 **Side panel.** The toolbar button and the context menu item open the full panel, where you can paste a draft and pick a rewrite style.
 
@@ -15,7 +15,7 @@ Both surfaces offer the same three styles:
 | Style | Effect |
 | --- | --- |
 | Paraphrase | Fresh wording, same meaning |
-| Formal | Replaces casual wording and contractions with professional equivalents |
+| Friendly | Warmer, more conversational wording, still polite |
 | Shorter | Cuts repetition and filler and tightens each sentence |
 
 Each style fixes the voice, the strength of the edit, and the target length, so you pick one action instead of tuning several settings.

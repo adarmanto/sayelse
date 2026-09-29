@@ -17,14 +17,15 @@ The project is pre-1.0, so anything may change before the first stable release.
 - Settings renamed the API token to API key and gained an endpoint URL.
 - Error messages now name the configured host instead of a fixed product.
 - Loopback addresses remain pre-granted, so the original local setup still works with no permission prompt.
-- The side panel rewrite controls are now three preset buttons, Paraphrase, Formal, and Shorter, matching the inline action bar. Each preset fixes the voice, edit strength, and target length that were previously four separate controls.
+- The side panel rewrite controls are now three preset buttons, Paraphrase, Friendly, and Shorter, matching the inline action bar. Each preset fixes the voice, edit strength, and target length that were previously four separate controls.
 - The remaining operations, More casual, Add detail, Fix grammar, and Originality check, have been removed, along with the standalone tone, intensity, and length controls.
-- Settings are now stored under a v3 schema that carries only the preset.
+- Settings are now stored under a v4 schema that carries only the preset.
 
 ### Migration
 
 - Existing settings are upgraded in place on first read. The stored API key, selected model, recipe, and theme carry over; the endpoint defaults to `http://127.0.0.1:20128/v1`.
-- A v1 or v2 recipe is upgraded to the v3 preset shape. A stored operation that is no longer offered, such as casual or expand, falls back to Paraphrase rather than failing the load, so the API key and model are never lost.
+- A v1, v2, or v3 payload is upgraded to the v4 preset shape. A stored operation that is no longer offered, such as casual or expand, falls back to Paraphrase rather than failing the load, so the API key and model are never lost.
+- The Formal preset is now Friendly, and it no longer rewrites into a professional voice. It now produces warm, conversational, still-polite text and allows natural contractions, which the old instruction actively stripped. A stored Formal default carries over as Friendly, so the choice is not lost, but the rewrite it produces will differ from before.
 
 ## [0.1.0] - 2026-09-25
 

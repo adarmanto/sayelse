@@ -3,7 +3,7 @@ import { OPERATIONS } from './constants';
 
 const baseRequest = {
   source: 'A short note about the launch.',
-  operation: 'formal' as const,
+  operation: 'friendly' as const,
 };
 
 describe('buildRewriteMessages', () => {

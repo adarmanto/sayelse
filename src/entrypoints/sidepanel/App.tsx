@@ -115,12 +115,6 @@ export default function App() {
       if (nextHandoff) {
         setSource(nextHandoff.source);
         setSourceKind('selected');
-        if (nextHandoff.preset) {
-          setControls({
-            ...nextSettings.defaults,
-            ...nextHandoff.preset,
-          });
-        }
       }
     })();
     return () => { active = false; abortRef.current?.abort(); };
@@ -149,9 +143,6 @@ export default function App() {
           setHandoff(nextHandoff);
           setSource(nextHandoff.source);
           setSourceKind('selected');
-          if (nextHandoff.preset) {
-            setControls((current) => ({ ...current, ...nextHandoff.preset }));
-          }
           setResult('');
           setStatus('idle');
           setView('write');

@@ -7,9 +7,7 @@ describe('inline rewrite flow', () => {
       type: 'run-inline-rewrite',
       requestId: 'request-1',
       source: 'remaining migration work.',
-      operation: 'formal',
-      tone: 'professional',
-      length: 'similar',
+      operation: 'friendly',
       capture: {
         version: 1,
         kind: 'textarea',
@@ -24,8 +22,29 @@ describe('inline rewrite flow', () => {
     expect(parsed.success).toBe(true);
   });
 
-  it('exposes only Paraphrase, Formal, and Shorter', () => {
-    expect(INLINE_ACTIONS.map((action) => action.label)).toEqual(['Paraphrase', 'Formal', 'Shorter']);
+  it('drops the removed recipe fields from an inline run request', () => {
+    // The v3 rewrite deleted tone, intensity, and length. A message that
+    // still carries them must parse without the preset reading a tone it no
+    // longer honours.
+    const parsed = runInlineRewriteMessageSchema.safeParse({
+      type: 'run-inline-rewrite',
+      requestId: 'request-1',
+      source: 'remaining migration work.',
+      operation: 'friendly',
+      tone: 'professional',
+      strength: 'balanced',
+      length: 'similar',
+      capture: null,
+    });
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.data).not.toHaveProperty('tone');
+    expect(parsed.data).not.toHaveProperty('strength');
+    expect(parsed.data).not.toHaveProperty('length');
+  });
+
+  it('exposes only Paraphrase, Friendly, and Shorter', () => {
+    expect(INLINE_ACTIONS.map((action) => action.label)).toEqual(['Paraphrase', 'Friendly', 'Shorter']);
   });
 
   it('requires exactly two non-empty alternatives on completion', () => {

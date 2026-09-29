@@ -50,7 +50,7 @@ vi.mock('../../lib/browser/permissions', async (importOriginal) => {
 });
 
 const baseSettings = {
-  version: 3 as const,
+  version: 4 as const,
   baseUrl: 'http://127.0.0.1:20128/v1',
   apiKey: 'key',
   selectedModel: 'the-model-the-user-picked',

@@ -1,6 +1,6 @@
 export const INLINE_ACTIONS = [
   { operation: 'paraphrase', label: 'Paraphrase' },
-  { operation: 'formal', label: 'Formal' },
+  { operation: 'friendly', label: 'Friendly' },
   { operation: 'concise', label: 'Shorter' },
 ] as const;
 

@@ -33,7 +33,7 @@ const writingStyleRules = [
  */
 const presetInstructions: Record<Operation, string> = {
   paraphrase: 'Rewrite with fresh wording and sentence structure so the meaning stays the same. Use a clear, neutral voice and make meaningful changes while keeping the author recognizable. Every sentence must differ in wording from the source, and the result should be close to the source length.',
-  formal: 'Rewrite in a polished professional voice, replacing casual words, contractions, slang, and informal phrasing with professional equivalents. Make meaningful changes while keeping the author recognizable, and keep the result close to the source length.',
+  friendly: 'Rewrite in a warm, relaxed, conversational voice that stays polite and respectful. Keep it easy and fluent to read, like one person talking to another, and allow natural contractions. Make meaningful changes while keeping the author recognizable, and keep the result close to the source length.',
   concise: 'Cut repetition, filler, and unnecessary words. Keep every important idea and make the result noticeably shorter, using a clear, neutral voice and a restrained edit that avoids unnecessary stylistic changes.',
 };
 

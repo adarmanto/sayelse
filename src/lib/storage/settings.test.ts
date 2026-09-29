@@ -59,11 +59,11 @@ describe('settings storage', () => {
     const migrated = await getSettings(storage);
 
     expect(migrated).toEqual({
-      version: 3,
+      version: 4,
       baseUrl: DEFAULT_BASE_URL,
       apiKey: 'legacy-key',
       selectedModel: 'legacy-model',
-      defaults: { operation: 'formal' },
+      defaults: { operation: 'friendly' },
       theme: 'dark',
     });
   });
@@ -75,7 +75,7 @@ describe('settings storage', () => {
     await getSettings(storage);
 
     const persisted = storage.data.get('sayelse.settings.v1') as Record<string, unknown>;
-    expect(persisted.version).toBe(3);
+    expect(persisted.version).toBe(4);
     expect(persisted.token).toBeUndefined();
     expect(persisted.apiKey).toBe('legacy-key');
   });
@@ -86,11 +86,11 @@ describe('settings storage', () => {
 
     const migrated = await getSettings(storage);
 
-    expect(migrated.version).toBe(3);
+    expect(migrated.version).toBe(4);
     expect(migrated.selectedModel).toBeNull();
     expect(migrated.theme).toBe('system');
     expect(migrated.defaults).toEqual(DEFAULT_SETTINGS.defaults);
-    expect((storage.data.get('sayelse.settings.v1') as Record<string, unknown>).version).toBe(3);
+    expect((storage.data.get('sayelse.settings.v1') as Record<string, unknown>).version).toBe(4);
   });
 
   it('falls back to the default preset for a v1 recipe that no longer exists', async () => {
@@ -104,7 +104,7 @@ describe('settings storage', () => {
     expect((await getSettings(storage)).defaults).toEqual({ operation: 'paraphrase' });
   });
 
-  it('migrates a v2 recipe to the v3 preset shape without failing', async () => {
+  it('migrates a v2 recipe to the v4 preset shape without failing', async () => {
     const storage = new MemoryStorage();
     storage.data.set('sayelse.settings.v1', {
       version: 2,
@@ -118,7 +118,7 @@ describe('settings storage', () => {
     const migrated = await getSettings(storage);
 
     expect(migrated).toEqual({
-      version: 3,
+      version: 4,
       baseUrl: 'https://api.example.com/v1',
       apiKey: 'kept-key',
       selectedModel: 'kept-model',
@@ -127,7 +127,7 @@ describe('settings storage', () => {
     });
   });
 
-  it('keeps a v2 preset that still exists in the new option set', async () => {
+  it('maps a v2 formal preset onto the renamed friendly preset', async () => {
     const storage = new MemoryStorage();
     storage.data.set('sayelse.settings.v1', {
       version: 2,
@@ -138,7 +138,59 @@ describe('settings storage', () => {
       theme: 'system',
     });
 
-    expect((await getSettings(storage)).defaults).toEqual({ operation: 'formal' });
+    expect((await getSettings(storage)).defaults).toEqual({ operation: 'friendly' });
+  });
+
+  it('renames the formal preset to friendly when a v3 payload is upgraded', async () => {
+    // The preset's meaning changed from "professional voice" to "chill but
+    // polite", so a user whose saved default was formal must land on the
+    // renamed preset rather than being reset to the default one.
+    const storage = new MemoryStorage();
+    storage.data.set('sayelse.settings.v1', {
+      version: 3,
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'kept-key',
+      selectedModel: 'kept-model',
+      defaults: { operation: 'formal' },
+      theme: 'dark',
+    });
+
+    const migrated = await getSettings(storage);
+
+    expect(migrated).toEqual({
+      version: 4,
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'kept-key',
+      selectedModel: 'kept-model',
+      defaults: { operation: 'friendly' },
+      theme: 'dark',
+    });
+    // The upgrade has to reach disk, or every read re-migrates a v3 payload
+    // and a v4 value that is somehow wrong is never repaired.
+    expect(storage.data.get('sayelse.settings.v1')).toEqual(migrated);
+  });
+
+  it('no longer accepts formal as a stored operation', () => {
+    // toV4Defaults maps formal across only because OPERATIONS no longer
+    // contains it. Re-adding the id would make the mapping dead code and
+    // silently change what a stored formal default means.
+    expect(
+      settingsSchema.safeParse({ ...getDefaultSettings(), defaults: { operation: 'formal' } }).success,
+    ).toBe(false);
+  });
+
+  it('keeps a v3 preset that was not renamed', async () => {
+    const storage = new MemoryStorage();
+    storage.data.set('sayelse.settings.v1', {
+      version: 3,
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: '',
+      selectedModel: null,
+      defaults: { operation: 'concise' },
+      theme: 'system',
+    });
+
+    expect((await getSettings(storage)).defaults).toEqual({ operation: 'concise' });
   });
 
   it('purges orphaned history keys left by the removed history feature', async () => {

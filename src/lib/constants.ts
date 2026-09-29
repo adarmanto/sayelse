@@ -10,19 +10,19 @@ export const LEGACY_HISTORY_KEY_PREFIX = 'sayelse.history.v1:';
 export const SETTINGS_STORAGE_KEY = 'sayelse.settings.v1';
 export const HANDOFF_STORAGE_KEY = 'sayelse.selection.v1';
 
-export const OPERATIONS = ['paraphrase', 'formal', 'concise'] as const;
+export const OPERATIONS = ['paraphrase', 'friendly', 'concise'] as const;
 export type Operation = (typeof OPERATIONS)[number];
 
 export type Theme = 'system' | 'light' | 'dark';
 
 export const OPERATION_LABELS: Record<Operation, string> = {
   paraphrase: 'Paraphrase',
-  formal: 'Formal',
+  friendly: 'Friendly',
   concise: 'Shorter',
 };
 
 export const DEFAULT_SETTINGS = {
-  version: 3 as const,
+  version: 4 as const,
   baseUrl: DEFAULT_BASE_URL,
   apiKey: '',
   selectedModel: null,
